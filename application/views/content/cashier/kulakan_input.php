@@ -1,0 +1,71 @@
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body p-4">
+                <form action="<?= base_url("simpan_kulakan") ?>" method="post" enctype="multipart/form-data">
+                    <div class="row mb-3">
+                        <div class="col-lg-4 d-none d-lg-block m-auto">Tanggal</div>
+                        <div class="col-lg-8">
+                            <input type="text" class="form-control" value="<?= date("d-m-Y H:i") ?>" readonly>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-lg-4 d-none d-lg-block">Dokumentasi / Nota <span class="text-danger">*</span></div>
+                        <div class="col-lg-8">
+                            <input type="file" name="dokumentasi" id="dokumentasi" accept=".png, .jpg" hidden required>
+                            <img src="https://getstamped.co.uk/wp-content/uploads/WebsiteAssets/Placeholder.jpg" alt="Dokumentasi Kulakan" id="foto_dokumentasi" width="25%">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <p class="text-sm">Daftar Barang Kulakan</p>
+                    <datalist id="data_barang">
+                        <?php
+                        $data_barang = $this->admin_model->get_data_select("data_barang_koperasi","nama_barang","id !=","result");
+                        if(!empty($data_barang)){
+                            foreach ($data_barang as $db) {
+                                echo '<option value="'.$db->nama_barang.'">'.$db->nama_barang.'</option>';
+                            }
+                        }
+                        ?>
+                    </datalist>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="text-center"><div style="width:25rem;">Nama Barang</div></th>
+                                    <th class="text-center"><div style="width:8rem;">Stok Saat Ini</div></th>
+                                    <th class="text-center"><div style="width:8rem;">Jumlah Kulakan</div></th>
+                                    <th class="text-center"><div style="width:10rem;">Harga Tengkulak (satuan)</div></th>
+                                    <th class="text-center">Subtotal</th>
+                                    <th class="text-center"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="list-barang">
+                                <tr id="row_1">
+                                    <td><input type="text" name="nama_barang[]" id="nama_barang_1" data-type="tambah" data-id="1" list="data_barang" class="form-control" onchange="get_data(this)"></td>
+                                    <td><input type="text" id="stok_1" class="form-control" readonly></td>
+                                    <td><input type="number" min="1" name="jumlah_barang[]" onkeyup="hitung_subtotal(this)" onchange="hitung_subtotal(this)" data-id="1" id="jumlah_1" class="form-control"></td>
+                                    <td><input type="text" name="harga_tengkulak[]" onkeyup="format_harga_tengkulak(this)" onchange="hitung_subtotal(this)" data-id="1" id="harga_1" class="form-control"></td>
+                                    <td><input type="text" id="subtotal_1" class="form-control" readonly></td>
+                                    <td class="align-middle"><a href="javascript:void(0)" class="btn btn-sm btn-danger" title="Delete" onclick="delete_row(this)" data-id="1"><i class="fas fa-trash-alt m-0"></i></a></td>
+                                </tr>
+                            </tbody>
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="text-right" colspan="4" style="font-size:16pt;">TOTAL BIAYA KULAKAN</th>
+                                    <th class="text-center" colspan="2"><span id="grand-total" style="font-size:16pt;">0</span></th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <div align="right">
+                        <a href="<?= base_url("kulakan"); ?>" class="btn btn-danger">Kembali</a>
+                        <button class="btn btn-info" type="submit">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

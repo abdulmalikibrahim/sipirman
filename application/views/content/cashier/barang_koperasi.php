@@ -10,6 +10,7 @@
                     <th>Foto Barang</th>
                     <th>Nama Barang</th>
                     <th>Harga</th>
+                    <th>Stok</th>
                     <th>Opsi</th>
                 </tr>
             </thead>
@@ -35,6 +36,7 @@
                                   <td class="align-middle">'.$foto_barang.'</td>
                                   <td class="align-middle"><div style="width:35rem;">'.$data->nama_barang.'</div></td>
                                   <td class="align-middle">Rp. '.number_format($data->harga,0,"",".").'</td>
+                                  <td class="align-middle '.($data->stok <= 0 ? "text-danger font-weight-bold" : "").'">'.(int)$data->stok.($data->stok <= 0 ? " (Habis)" : "").'</td>
                                   <td class="align-middle">
                                       <a href="'.base_url("tambah_barang_koperasi/".$data->id).'" data-toggle="tooltip" title="Edit"><i class="fas fa-edit icon-aksi pr-2"></i></a>
           

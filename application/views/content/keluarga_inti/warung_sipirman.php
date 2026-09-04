@@ -45,15 +45,23 @@
                                           $all_tahanan = $this->admin_model->get_data_select("tahanan","*","code_napi IN (".$kode_tahanan.") AND code_napi != ''","result");
                                           foreach ($all_tahanan as $tahanan) {
                                                 if($this->keluarga_inti > 0){
-                                                      $total_sisa_uang = $this->admin_model->get_data_select("penyimpanan_uang","SUM(jumlah_uang) as total_uang, SUM((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id)) as total_penggunaan","kode_tahanan = '".$tahanan->code_napi."' AND id != '' ORDER BY tanggal DESC LIMIT 0,20","row");
-                              
-                                                      $total_sisa_uang_digital = $total_sisa_uang->total_uang - $total_sisa_uang->total_penggunaan;
+                                                      // Keluarga inti bisa belanja pakai seluruh dompet WBP, termasuk sampai minus (hutang)
+                                                      $total_sisa_uang_digital = $this->admin_model->get_saldo_digital($tahanan->code_napi);
+                                                      $total_uang_raw = $total_sisa_uang_digital;
+                                                      $total_penggunaan_raw = 0;
                                                 }else{
                                                       $total_sisa_uang = $this->admin_model->get_data_select("penyimpanan_uang","SUM(jumlah_uang) as total_uang, SUM((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id)) as total_penggunaan","kode_tahanan = '".$tahanan->code_napi."' AND nama_pengirim = '".$this->nama."' AND id != '' ORDER BY tanggal DESC LIMIT 0,20","row");
-      
+
                                                       $total_sisa_uang_digital = $total_sisa_uang->total_uang - $total_sisa_uang->total_penggunaan;
+                                                      $total_uang_raw = $total_sisa_uang->total_uang;
+                                                      $total_penggunaan_raw = $total_sisa_uang->total_penggunaan;
                                                 }
-                                                echo '<option value="'.$tahanan->code_napi.'" data-uang-terima="'.$total_sisa_uang->total_uang.'" data-uang-terpakai="'.$total_sisa_uang->total_penggunaan.'" data-sisa-uang="'.number_format($total_sisa_uang_digital,0,"",".").'">'.$tahanan->nama.'</option>';
+                                                if($total_sisa_uang_digital < 0){
+                                                      $sisa_uang_display = '-'.number_format(abs($total_sisa_uang_digital),0,"",".").' (HUTANG)';
+                                                }else{
+                                                      $sisa_uang_display = number_format($total_sisa_uang_digital,0,"",".");
+                                                }
+                                                echo '<option value="'.$tahanan->code_napi.'" data-uang-terima="'.$total_uang_raw.'" data-uang-terpakai="'.$total_penggunaan_raw.'" data-sisa-uang="'.$sisa_uang_display.'">'.$tahanan->nama.'</option>';
                                           }
                                     }
                                     ?>

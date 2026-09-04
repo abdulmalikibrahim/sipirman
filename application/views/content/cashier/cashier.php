@@ -110,25 +110,18 @@
                                     if(!empty($tahanan)){
                                           $no = 1;
                                           foreach ($tahanan as $tahanan) {
-                                                $total_sisa_uang = $this->admin_model->get_data_select("penyimpanan_uang","SUM(jumlah_uang) as total_uang, SUM((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id)) as total_penggunaan","kode_tahanan = '".$tahanan->code_napi."' AND id != '' ORDER BY tanggal DESC LIMIT 0,20","row");
-                                                $total_sisa_uang_digital = $total_sisa_uang->total_uang - $total_sisa_uang->total_penggunaan;
-                                                if(!empty($total_sisa_uang_digital)){
-                                                      $total_sisa_uang_digital = number_format($total_sisa_uang_digital,0,"",".");
+                                                $saldo_digital = $this->admin_model->get_saldo_digital($tahanan->code_napi);
+                                                if($saldo_digital < 0){
+                                                      $total_sisa_uang_digital = '<span class="text-danger">-'.number_format(abs($saldo_digital),0,"",".").' (HUTANG)</span>';
                                                 }else{
-                                                      $total_sisa_uang_digital = 0;
+                                                      $total_sisa_uang_digital = number_format($saldo_digital,0,"",".");
                                                 }
 
-                                                $get_data_diserahkan = $this->admin_model->get_data_select("penggunaan_uang","id,tanggal,total_penggunaan,(SELECT COALESCE(SUM(penggunaan),0) FROM belanja_uang_tunai WHERE belanja_uang_tunai.id_penyerahan=penggunaan_uang.id) as total_belanja_tunai,(total_penggunaan-(SELECT COALESCE(SUM(penggunaan),0) FROM belanja_uang_tunai WHERE belanja_uang_tunai.id_penyerahan=penggunaan_uang.id)) as sisa_uang_tunai","penggunaan LIKE '%Diserahkan Tunai Ke WBP%' AND kode_tahanan = '".$tahanan->code_napi."' ORDER BY tanggal DESC LIMIT 0,20","result");
-                                                $get_data_diserahkan = array_reverse($get_data_diserahkan);
-                                                $total_uang_dipegang = 0;
-                                                foreach ($get_data_diserahkan as $gdd) {
-                                                      $total_uang_dipegang += $gdd->sisa_uang_tunai;
-                                                }
-
-                                                if(!empty($total_uang_dipegang)){
-                                                      $total_sisa_uang_manual = number_format($total_uang_dipegang,0,"",".");
+                                                $saldo_tunai = $this->admin_model->get_saldo_tunai($tahanan->code_napi);
+                                                if($saldo_tunai < 0){
+                                                      $total_sisa_uang_manual = '<span class="text-danger">-'.number_format(abs($saldo_tunai),0,"",".").' (HUTANG)</span>';
                                                 }else{
-                                                      $total_sisa_uang_manual = 0;
+                                                      $total_sisa_uang_manual = number_format($saldo_tunai,0,"",".");
                                                 }
                                                 echo '
                                                 <tr style="cursor:pointer; font-size:10pt;" title="Klik baris untuk memilih" data-code-napi="'.$tahanan->code_napi.'" data-nama="'.$tahanan->nama.'" onclick="pick_tahanan(this)">
@@ -163,8 +156,8 @@
                         <input type="file" name="bukti" id="bukti" accept=".png, .jpg" hidden required>
                         <img src="https://getstamped.co.uk/wp-content/uploads/WebsiteAssets/Placeholder.jpg" alt="Bukti Penyerahan" id="foto_bukti" width="100%">
                         <div class="row mt-3">
-                              <div class="col-6"><a href="javascript:void(0)" id="uang-manual" data-code-napi="" class="btn btn-info w-100" onclick="proses_pembayaran(this)">UANG TUNAI</a></div>
-                              <div class="col-6"><a href="javascript:void(0)" id="uang-digital" data-code-napi="" class="btn btn-info w-100" onclick="tampil_modal_pin(this)">UANG DIGITAL</a></div>
+                              <div class="col-6"><a href="javascript:void(0)" id="uang-manual" data-code-napi="" class="btn btn-success w-100" onclick="proses_pembayaran(this)"><i class="fas fa-money-bill-wave d-block mb-1" style="font-size:16pt;"></i>UANG TUNAI</a></div>
+                              <div class="col-6"><a href="javascript:void(0)" id="uang-digital" data-code-napi="" class="btn btn-primary w-100" onclick="tampil_modal_pin(this)"><i class="fas fa-wallet d-block mb-1" style="font-size:16pt;"></i>UANG DIGITAL</a></div>
                         </div>
                   </div>
             </div>

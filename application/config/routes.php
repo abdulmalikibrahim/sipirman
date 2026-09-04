@@ -122,6 +122,21 @@ $route['verify_pin'] = 'cashier/verify_pin';
 $route['rekap_penjualan']            = 'cashier/rekap_penjualan';
 $route['terima_pembayaran_digital']  = 'cashier/terima_pembayaran_digital';
 
+// KULAKAN
+$route['kulakan']              = 'Cashier/kulakan';
+$route['kulakan_input']        = 'Cashier/kulakan_input';
+$route['simpan_kulakan']       = 'Cashier/simpan_kulakan';
+$route['get_detail_kulakan']   = 'Cashier/get_detail_kulakan';
+$route['delete_kulakan']       = 'Cashier/delete_kulakan';
+
+// TOP UP SALDO WBP MANDIRI
+$route['topup_saldo']  = 'Cashier/topup_saldo';
+$route['simpan_topup'] = 'Cashier/simpan_topup';
+
+// DAFTAR HUTANG WBP
+$route['daftar_hutang']       = 'Cashier/daftar_hutang';
+$route['get_detail_hutang']   = 'Cashier/get_detail_hutang';
+
 // KELUARGA INTI
 $route["login_keluarga"] = 'Keluarga_inti/login_keluarga';
 $route["saku_wbp"] = 'Keluarga_inti/saku_wbp';

@@ -11,6 +11,7 @@
                         <th>Foto Barang</th>
                         <th>Nama Barang</th>
                         <th>Harga</th>
+                        <th>Stok</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -35,6 +36,7 @@
                                     <td class="align-middle">'.$foto_barang.'</td>
                                     <td class="align-middle"><div style="width:20rem;">'.$data->nama_barang.'</div></td>
                                     <td class="align-middle">Rp. '.number_format($data->harga,0,"",".").'</td>
+                                    <td class="align-middle '.($data->stok <= 0 ? "text-danger font-weight-bold" : "").'">'.($data->stok <= 0 ? "Habis" : (int)$data->stok).'</td>
                                 </tr>';
                             }
                     }
