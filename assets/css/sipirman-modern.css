@@ -835,6 +835,21 @@ form .card {
 select.form-control {
   background-color: #fff;
 }
+/* Bootstrap's own "select.form-control-sm:not([size]):not([multiple])"
+   rule sets a fixed height:1.8125rem (29px) - a type+class+2 :not()
+   selector, which beats our plain ".form-control" class rule on
+   specificity regardless of stylesheet order. At our font-size that 29px
+   isn't tall enough for its own padding + line box, so the option text
+   ("Semua Status" in tagihan_rumbang_mart.php) got clipped top/bottom
+   instead of sitting centered. Match/exceed that selector's specificity
+   directly rather than fighting it with !important. */
+select.form-control-sm:not([size]):not([multiple]) {
+  height: calc(1.6em + 0.6rem + 2px);
+}
+.form-control-sm {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.82rem;
+}
 
 /* ---------------------------------------------------------------------- *
  * 11b. "Update Status Penitipan" panel (home.php - P2U/Komandan dashboards)
