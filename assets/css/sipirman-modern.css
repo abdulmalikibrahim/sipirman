@@ -9,8 +9,8 @@
    on disk and still power the public login page.
 
    No markup was changed to build this: every rule below targets class names
-   and ids that already exist in application/views/layout/*.php and
-   application/views/content/**/*.php, so simply swapping the stylesheet
+   and ids that already exist in application/views/layout and every nested
+   file under application/views/content, so simply swapping the stylesheet
    reference is enough to re-skin the whole panel.
 
    A handful of rules use !important solely to win against inline
