@@ -29,7 +29,7 @@ $jumlah_uang = "Rp. ".number_format($this->input->get("i"),0,"",".");
                         <div class="col-lg-12">
                             <label for="" class="mt-2">Bukti Penyerahan</label>
                             <input type="file" name="bukti" id="bukti" accept=".png, .jpg" hidden required>
-                            <img src="https://getstamped.co.uk/wp-content/uploads/WebsiteAssets/Placeholder.jpg" alt="Bukti Penyerahan" id="foto_bukti" width="100%">
+                            <img src="data:image/svg+xml,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20200%20150%22><rect%20width=%22200%22%20height=%22150%22%20fill=%22%23f3f4f8%22/><g%20fill=%22none%22%20stroke=%22%23c7cbd4%22%20stroke-width=%224%22><rect%20x=%2255%22%20y=%2240%22%20width=%2290%22%20height=%2265%22%20rx=%226%22/><circle%20cx=%2280%22%20cy=%2263%22%20r=%228%22/><path%20d=%22M55%2095l25-25%2020%2018%2015-15%2030%2030%22/></g><text%20x=%22100%22%20y=%22128%22%20font-family=%22sans-serif%22%20font-size=%2213%22%20fill=%22%239aa4b8%22%20text-anchor=%22middle%22>No%20Image</text></svg>" alt="Bukti Penyerahan" id="foto_bukti" width="100%">
                         </div>
                         <div class="col-lg-12 mt-2 text-right">
                             <a href="<?= base_url("rincian_uang/".$this->p2); ?>" class="btn btn-sm btn-danger">Kembali</a>
