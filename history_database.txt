@@ -1,0 +1,103 @@
+CREATE TABLE `rutanrem_sipirman`.`tahanan` (`id` INT NOT NULL AUTO_INCREMENT , `code_napi` VARCHAR(25) NULL , `nama_ayah` VARCHAR(100) NULL , `nama` VARCHAR(100) NULL , `jenis_kelamin` ENUM('Pria','Wanita') NULL , PRIMARY KEY (`id`)) ENGINE = MyISAM;
+
+COPY DATABASE data_titipan menjadi data_penyimpanan
+
+ALTER TABLE `data_penyimpanan` DROP `status`, DROP `diterima_p2u`, DROP `pic_p2u`, DROP `diterima_komandan`, DROP `pic_komandan`, DROP `diterima_wbp`, DROP `status_dokumentasi`, DROP `foto_bukti`, DROP `list_barang_p2u`, DROP `list_barang_komandan`, DROP `alasan_tolak_komandan`, DROP `list_barang_selesai_antar`, DROP `alasan_tolak_wbp`, DROP `pesan_tahanan`;
+ALTER TABLE `data_penyimpanan` CHANGE `data_barang` `data_antispetik` TEXT CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL;
+ALTER TABLE `data_penyimpanan`  ADD `data_obat` TEXT NULL  AFTER `data_antispetik`,  ADD `jumlah_uang` INT NULL  AFTER `data_obat`;
+ALTER TABLE `data_penyimpanan`
+  DROP `data_obat`,
+  DROP `jumlah_uang`;
+RENAME TABLE `rutanrem_sipirman`.`data_penyimpanan`
+                  TO `rutanrem_sipirman`.`penyimpanan_antiseptik`;
+
+
+CREATE TABLE `rutanrem_sipirman`.`penyimpanan_obat` (
+  `id` int(11) NOT NULL,
+  `deleted_date` date DEFAULT NULL,
+  `resi` varchar(10) NOT NULL,
+  `input_by` varchar(100) NOT NULL,
+  `tanggal` datetime DEFAULT NULL,
+  `nik` varchar(20) DEFAULT NULL,
+  `nama_pengirim` varchar(100) DEFAULT NULL,
+  `hubungan` varchar(50) DEFAULT NULL,
+  `keluarga_inti` enum('Tidak','Ya','','') NOT NULL,
+  `pesan_penitip` text,
+  `nama_tahanan` varchar(100) DEFAULT NULL,
+  `data_antispetik` text
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+ALTER TABLE `rutanrem_sipirman`.`penyimpanan_obat` ADD PRIMARY KEY (`id`);
+ALTER TABLE `rutanrem_sipirman`.`penyimpanan_obat` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+
+CREATE TABLE `rutanrem_sipirman`.`penyimpanan_uang` (
+  `id` int(11) NOT NULL,
+  `deleted_date` date DEFAULT NULL,
+  `resi` varchar(10) NOT NULL,
+  `input_by` varchar(100) NOT NULL,
+  `tanggal` datetime DEFAULT NULL,
+  `nik` varchar(20) DEFAULT NULL,
+  `nama_pengirim` varchar(100) DEFAULT NULL,
+  `hubungan` varchar(50) DEFAULT NULL,
+  `keluarga_inti` enum('Tidak','Ya','','') NOT NULL,
+  `pesan_penitip` text,
+  `nama_tahanan` varchar(100) DEFAULT NULL,
+  `data_antispetik` text
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+ALTER TABLE `rutanrem_sipirman`.`penyimpanan_uang` ADD PRIMARY KEY (`id`);
+ALTER TABLE `rutanrem_sipirman`.`penyimpanan_uang` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `penyimpanan_uang` CHANGE `data_antispetik` `jumlah_uang` INT NULL DEFAULT NULL;
+
+ALTER TABLE `penyimpanan_obat` CHANGE `data_antispetik` `data_obat` TEXT CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL;
+
+ALTER TABLE `penyimpanan_antiseptik` CHANGE `id` `id` INT(30) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `penyimpanan_obat` CHANGE `id` `id` INT(30) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `penyimpanan_uang` CHANGE `id` `id` INT(30) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `penyimpanan_antiseptik` CHANGE `keluarga_inti` `keluarga_inti` ENUM('Tidak','Ya') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL;
+ALTER TABLE `penyimpanan_obat` CHANGE `keluarga_inti` `keluarga_inti` ENUM('Tidak','Ya') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL;
+ALTER TABLE `penyimpanan_uang` CHANGE `keluarga_inti` `keluarga_inti` ENUM('Tidak','Ya') CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL;
+
+ALTER TABLE `penyimpanan_antiseptik` DROP `pesan_penitip`;
+ALTER TABLE `penyimpanan_obat` DROP `pesan_penitip`;
+ALTER TABLE `penyimpanan_uang` DROP `pesan_penitip`;
+
+ALTER TABLE `penyimpanan_antiseptik`  ADD `kode_tahanan` VARCHAR(30) NULL  AFTER `keluarga_inti`;
+ALTER TABLE `penyimpanan_obat`  ADD `kode_tahanan` VARCHAR(30) NULL  AFTER `keluarga_inti`;
+ALTER TABLE `penyimpanan_uang`  ADD `kode_tahanan` VARCHAR(30) NULL  AFTER `keluarga_inti`;
+
+ALTER TABLE `penyimpanan_antiseptik` CHANGE `data_antispetik` `data_antiseptik` TEXT CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL;
+
+CREATE TABLE `rutanrem_sipirman`.`penggunaan_uang` ( `id` INT NOT NULL AUTO_INCREMENT ,  `tanggal` DATETIME NULL ,  `kode_tahanan` VARCHAR(30) NULL ,  `penggunaan` TEXT NULL ,  `total_penggunaan` INT NULL ,  `saldo_awal` INT NULL ,  `saldo_akhir` INT NULL ,  `bukti` TEXT NULL ,  `id_uang_masuk` INT NULL ,    PRIMARY KEY  (`id`)) ENGINE = InnoDB;
+
+CREATE TABLE `rutanrem_sipirman`.`belanja_uang_tunai` ( `id` INT NOT NULL AUTO_INCREMENT ,  `tanggal` DATETIME NULL ,  `id_penyerahan` INT NULL ,  `kode_tahanan` VARCHAR(30) NULL ,  `data_belanja` TEXT NULL ,    PRIMARY KEY  (`id`)) ENGINE = InnoDB;
+ALTER TABLE `belanja_uang_tunai`  ADD `total_sisa` INT NULL  AFTER `data_belanja`;
+ALTER TABLE `belanja_uang_tunai` ADD `bukti` TEXT NULL AFTER `total_sisa`;
+CREATE TABLE `rutanrem_sipirman`.`data_barang_koperasi` ( `id` INT NOT NULL AUTO_INCREMENT ,  `kode_barang` VARCHAR(100) NULL ,  `nama_barang` VARCHAR(100) NULL ,  `harga` INT NULL ,    PRIMARY KEY  (`id`)) ENGINE = InnoDB;
+ALTER TABLE `account` CHANGE `level` `level` ENUM('Admin','Tracer','Komandan','Cashier') CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL;
+ALTER TABLE `belanja_uang_tunai` ADD `penggunaan` INT NULL AFTER `data_belanja`;
+ALTER TABLE `belanja_uang_tunai` ADD `saldo_awal` INT NULL AFTER `data_belanja`;
+
+ALTER TABLE `penitip` ADD `username` VARCHAR(100) NULL AFTER `foto_pernyataan`, ADD `password` TEXT NULL AFTER `username`;
+ALTER TABLE `penitip` ADD `keluarga_inti` ENUM('1','0') NULL DEFAULT '0' AFTER `password`;
+ALTER TABLE `penitip` ADD `kode_tahanan` VARCHAR(15) NOT NULL AFTER `hp`;
+ALTER TABLE `penggunaan_uang` ADD `status` ENUM('Need Confirm','Process','Received') NULL AFTER `bukti`;
+ALTER TABLE `penggunaan_uang` CHANGE `status` `status` ENUM('Need Confirm','Process','Received') CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT 'Received';
+ALTER TABLE `penggunaan_uang` ADD `id_belanja_keluarga` VARCHAR(25) NULL AFTER `status`;
+ALTER TABLE `penggunaan_uang` ADD `tanggal_diserahkan` DATETIME NULL AFTER `id_belanja_keluarga`;
+ALTER TABLE `penggunaan_uang` CHANGE `status` `status` ENUM('Need Confirm','Process','Received','Discard') CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT 'Received';
+ALTER TABLE `penggunaan_uang` ADD `alasan_discard` TEXT NULL AFTER `tanggal_diserahkan`;
+ALTER TABLE `penggunaan_uang` CHANGE `tanggal_diserahkan` `tanggal_diserahkan` TEXT NULL DEFAULT NULL;
+ALTER TABLE `penggunaan_uang` CHANGE `tanggal_diserahkan` `tanggal_diserahkan` DATETIME NULL DEFAULT NULL;
+
+============================23 may 2023============================
+ALTER TABLE `penyimpanan_uang` ADD `pesan_penitip` TEXT NULL AFTER `jumlah_uang`;
+ALTER TABLE `penyimpanan_obat` ADD `pesan_penitip` TEXT NULL AFTER `data_obat`;
+ALTER TABLE `penyimpanan_antiseptik` ADD `pesan_penitip` TEXT NULL AFTER `data_antiseptik`;
+ALTER TABLE `data_titipan` ADD `kode_tahanan` VARCHAR(20) NULL AFTER `pesan_penitip`;
+
+===========================24 may 2023==============================
+ALTER TABLE `penitip` CHANGE `kode_tahanan` `kode_tahanan` TEXT CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL;
+ALTER TABLE `data_barang_koperasi` ADD `foto_barang` TEXT NULL AFTER `harga`;
+ALTER TABLE `account` CHANGE `level` `level` ENUM('Admin','Tracer','Komandan','Cashier','Super Admin') CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL;

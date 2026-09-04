@@ -1,0 +1,19 @@
+# User-uploaded files (photos, proofs of purchase, ID scans, etc.) - not source code
+/upload/*
+
+# Internal bug reports / working notes - not meant for the repo
+/docs/
+
+# Database dump - contains real account credentials and inmate/family personal data
+/db/
+
+# CodeIgniter runtime artifacts (regenerated automatically, not source)
+/application/logs/*
+!/application/logs/index.html
+/application/cache/*
+!/application/cache/index.html
+/error_log
+
+# Local environment cruft
+.DS_Store
+Thumbs.db
