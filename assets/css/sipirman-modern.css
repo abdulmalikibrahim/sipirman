@@ -477,12 +477,20 @@ a:has(.card):hover .card {
 .card > .card-body > .row {
   align-items: center;
 }
-.card .bg-info,
-.card .bg-success,
-.card .bg-warning,
-.card .bg-danger,
-.card .bg-primary,
-.card .bg-secondary {
+/* IMPORTANT: scoped to ".card > .card-body > .row > div.bg-*" (the exact
+   nesting depth of the stat-card icon block) rather than a bare ".card
+   .bg-info" - bg-info/bg-success/etc are common Bootstrap utility classes,
+   and a bare ".card .bg-*" descendant selector was matching ANY of them
+   inside ANY card anywhere in the app, including <th class="bg-info"> table
+   headers (e.g. the colspan header row in penyerahan_uang.php's "Rincian
+   Penggunaan Uang Tunai" table) - turning a table header cell into a tiny
+   flex square and breaking the whole table's layout. */
+.card > .card-body > .row > div.bg-info,
+.card > .card-body > .row > div.bg-success,
+.card > .card-body > .row > div.bg-warning,
+.card > .card-body > .row > div.bg-danger,
+.card > .card-body > .row > div.bg-primary,
+.card > .card-body > .row > div.bg-secondary {
   border-radius: var(--sp-radius);
   display: flex;
   align-items: center;
@@ -492,12 +500,12 @@ a:has(.card):hover .card {
   margin: 0 auto;
   background: var(--sp-primary-light) !important;
 }
-.card .bg-info .icon,
-.card .bg-success .icon,
-.card .bg-warning .icon,
-.card .bg-danger .icon,
-.card .bg-primary .icon,
-.card .bg-secondary .icon {
+.card > .card-body > .row > div.bg-info .icon,
+.card > .card-body > .row > div.bg-success .icon,
+.card > .card-body > .row > div.bg-warning .icon,
+.card > .card-body > .row > div.bg-danger .icon,
+.card > .card-body > .row > div.bg-primary .icon,
+.card > .card-body > .row > div.bg-secondary .icon {
   color: var(--sp-primary) !important;
 }
 /* Give each of the 4 workflow-stage stat cards (Menunggu -> Diterima P2U ->

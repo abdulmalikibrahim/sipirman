@@ -154,7 +154,7 @@
                   <div class="modal-body">
                         <label for="" class="mt-0">Bukti Penyerahan</label>
                         <input type="file" name="bukti" id="bukti" accept=".png, .jpg" hidden required>
-                        <img src="https://getstamped.co.uk/wp-content/uploads/WebsiteAssets/Placeholder.jpg" alt="Bukti Penyerahan" id="foto_bukti" width="100%">
+                        <img src="data:image/svg+xml,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20200%20150%22><rect%20width=%22200%22%20height=%22150%22%20fill=%22%23f3f4f8%22/><g%20fill=%22none%22%20stroke=%22%23c7cbd4%22%20stroke-width=%224%22><rect%20x=%2255%22%20y=%2240%22%20width=%2290%22%20height=%2265%22%20rx=%226%22/><circle%20cx=%2280%22%20cy=%2263%22%20r=%228%22/><path%20d=%22M55%2095l25-25%2020%2018%2015-15%2030%2030%22/></g><text%20x=%22100%22%20y=%22128%22%20font-family=%22sans-serif%22%20font-size=%2213%22%20fill=%22%239aa4b8%22%20text-anchor=%22middle%22>No%20Image</text></svg>" alt="Bukti Penyerahan" id="foto_bukti" width="100%">
                         <div class="row mt-3">
                               <div class="col-6"><a href="javascript:void(0)" id="uang-manual" data-code-napi="" class="btn btn-success w-100" onclick="proses_pembayaran(this)"><i class="fas fa-money-bill-wave d-block mb-1" style="font-size:16pt;"></i>UANG TUNAI</a></div>
                               <div class="col-6"><a href="javascript:void(0)" id="uang-digital" data-code-napi="" class="btn btn-primary w-100" onclick="tampil_modal_pin(this)"><i class="fas fa-wallet d-block mb-1" style="font-size:16pt;"></i>UANG DIGITAL</a></div>
