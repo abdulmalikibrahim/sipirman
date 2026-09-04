@@ -19,6 +19,31 @@ class Confirm_belanja extends MY_Controller {
             if($this->form_validation->run() === TRUE){
                   $id_belanja = $this->input->post("id_belanja");
                   if($p == "deny"){
+                        // Kembalikan stok barang yang sudah dipotong saat order dibuat, sebelum
+                        // statusnya diubah jadi Discard. Satu order (id_belanja_keluarga) bisa
+                        // punya beberapa baris penggunaan_uang (FIFO per sumber dana) tapi semua
+                        // baris menyimpan JSON "penggunaan" yang sama, jadi cukup diproses sekali.
+                        $rows_dibatalkan = $this->admin_model->get_data_select("penggunaan_uang","penggunaan","id_belanja_keluarga = '$id_belanja' AND status != 'Discard' LIMIT 1","result");
+                        if(!empty($rows_dibatalkan)){
+                              $decoded_penggunaan = json_decode($rows_dibatalkan[0]->penggunaan, true);
+                              if(!empty($decoded_penggunaan)){
+                                    foreach ($decoded_penggunaan as $daftar_item) {
+                                          if(is_array($daftar_item)){
+                                                foreach ($daftar_item as $item_qty => $harga) {
+                                                      if(preg_match('/^(.*) \((\d+)\)$/', $item_qty, $m)){
+                                                            $nama_barang_restore = trim($m[1]);
+                                                            $jumlah_restore = (int) $m[2];
+                                                      }else{
+                                                            $nama_barang_restore = trim($item_qty);
+                                                            $jumlah_restore = 1;
+                                                      }
+                                                      $this->admin_model->ubah_stok($nama_barang_restore, $jumlah_restore);
+                                                }
+                                          }
+                                    }
+                              }
+                        }
+
                         $alasan_discard = $this->input->post("alasan_discard");
                         $history_date["confirmation"] = date("Y-m-d H:i:s");
                         $data_update = [

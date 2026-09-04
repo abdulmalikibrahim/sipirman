@@ -253,74 +253,146 @@ class Keluarga_inti extends MY_Controller {
                               $belanja_koperasi["Belanja Warung SIPIRMAN (Oleh Penitip ".$this->nama.")"] = $daftar_belanja;
                         }
 
-                        //CHECK PENYIMPANAN UANG
-                        if($this->keluarga_inti > 0){
-                              $riwayat_penyimpanan = $this->admin_model->get_data_select("penyimpanan_uang","id,jumlah_uang,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) as total_penggunaan,(jumlah_uang-IF((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) > 0,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id),0)) as sisa_uang","kode_tahanan = '$code_napi' HAVING sisa_uang >= 1 AND id != '' ORDER BY tanggal DESC LIMIT 0,20","result");
-      
-                              $total_sisa_uang = $this->admin_model->get_data_select("penyimpanan_uang","SUM(jumlah_uang) as total_uang, SUM((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id)) as total_penggunaan","kode_tahanan = '$code_napi' AND id != '' ORDER BY tanggal DESC LIMIT 0,20","row");
-      
-                              $total_sisa_uang_digital = $total_sisa_uang->total_uang - $total_sisa_uang->total_penggunaan;
+                        $validasi_stok = $this->admin_model->validasi_stok($nama_barang, $qty);
+                        if($validasi_stok !== TRUE){
+                              $this->swal("Gagal",$validasi_stok,"error");
                         }else{
-                              $riwayat_penyimpanan = $this->admin_model->get_data_select("penyimpanan_uang","id,jumlah_uang,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) as total_penggunaan,(jumlah_uang-IF((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) > 0,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id),0)) as sisa_uang","kode_tahanan = '$code_napi' AND nama_pengirim = '".$this->nama."' HAVING sisa_uang >= 1 AND id != '' ORDER BY tanggal DESC LIMIT 0,20","result");
-      
-                              $total_sisa_uang = $this->admin_model->get_data_select("penyimpanan_uang","SUM(jumlah_uang) as total_uang, SUM((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id)) as total_penggunaan","kode_tahanan = '$code_napi' AND nama_pengirim = '".$this->nama."' AND id != '' ORDER BY tanggal DESC LIMIT 0,20","row");
-      
-                              $total_sisa_uang_digital = $total_sisa_uang->total_uang - $total_sisa_uang->total_penggunaan;
-                        }
-                        if($total_sisa_uang_digital < $total_belanja){
-                              $fb = ["status" => 500, "title" => "Gagal", "res" => "Gagal menyimpan, WBP hanya memiliki simpanan uang sebesar ".number_format($total_sisa_uang_digital,0,"","."), "icon" => "error"];
-                        }else{
-                              if(!empty($riwayat_penyimpanan)){
+                              $id_belanja_keluarga = date("YmdHis").$this->user_id;
+                              if($this->keluarga_inti > 0){
+                                    // Keluarga inti menghabiskan seluruh dompet (saldo digital) WBP,
+                                    // dan BOLEH sampai minus/berhutang.
+                                    $riwayat_penyimpanan = $this->admin_model->get_data_select("penyimpanan_uang","id,jumlah_uang,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) as total_penggunaan,(jumlah_uang-IF((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) > 0,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id),0)) as sisa_uang","kode_tahanan = '$code_napi' HAVING sisa_uang >= 1 AND id != '' ORDER BY tanggal DESC LIMIT 0,20","result");
+
+                                    $data_penggunaan = [];
                                     $sisa_penggunaan = $total_belanja;
-                                    $saldo_akhir_1 = 0;
-                                    foreach (array_reverse($riwayat_penyimpanan) as $rp) {
-                                          // echo $rp->id."\n";
-                                          if(!empty($rp->sisa_uang)){
-                                                // echo $sisa_penggunaan."\n";
-                                                if($sisa_penggunaan > 0){
-                                                      if($rp->sisa_uang > $sisa_penggunaan){
-                                                            $data_penggunaan[$rp->id]["saldo_awal"] = $rp->sisa_uang;
-                                                            $data_penggunaan[$rp->id]["total_penggunaan"] = $sisa_penggunaan;
-                                                            $data_penggunaan[$rp->id]["saldo_akhir"] = $rp->sisa_uang-$sisa_penggunaan;
-                                                            $sisa_penggunaan -= $sisa_penggunaan;
-                                                      }else{
-                                                            $data_penggunaan[$rp->id]["saldo_awal"] = $rp->sisa_uang;
-                                                            $data_penggunaan[$rp->id]["total_penggunaan"] = $rp->sisa_uang;
-                                                            $data_penggunaan[$rp->id]["saldo_akhir"] = 0;
-                                                            $sisa_penggunaan -= $rp->sisa_uang;
+                                    if(!empty($riwayat_penyimpanan)){
+                                          foreach (array_reverse($riwayat_penyimpanan) as $rp) {
+                                                if(!empty($rp->sisa_uang)){
+                                                      if($sisa_penggunaan > 0){
+                                                            if($rp->sisa_uang > $sisa_penggunaan){
+                                                                  $data_penggunaan[$rp->id]["saldo_awal"] = $rp->sisa_uang;
+                                                                  $data_penggunaan[$rp->id]["total_penggunaan"] = $sisa_penggunaan;
+                                                                  $data_penggunaan[$rp->id]["saldo_akhir"] = $rp->sisa_uang-$sisa_penggunaan;
+                                                                  $sisa_penggunaan -= $sisa_penggunaan;
+                                                            }else{
+                                                                  $data_penggunaan[$rp->id]["saldo_awal"] = $rp->sisa_uang;
+                                                                  $data_penggunaan[$rp->id]["total_penggunaan"] = $rp->sisa_uang;
+                                                                  $data_penggunaan[$rp->id]["saldo_akhir"] = 0;
+                                                                  $sisa_penggunaan -= $rp->sisa_uang;
+                                                            }
                                                       }
                                                 }
                                           }
                                     }
-                                    // echo $sisa_penggunaan;
-                              }
-                              // print_r($data_penggunaan);
-                              // die();
-                              if(!empty($data_penggunaan)){
-                                    foreach ($data_penggunaan as $id_uang_masuk => $value_dp) {
+
+                                    $data_input = [];
+                                    if(!empty($data_penggunaan)){
+                                          foreach ($data_penggunaan as $id_uang_masuk => $value_dp) {
+                                                $data_input[] = [
+                                                      "id_uang_masuk" => $id_uang_masuk,
+                                                      "tanggal" => date("Y-m-d H:i:s"),
+                                                      "kode_tahanan" => $code_napi,
+                                                      "penggunaan" => json_encode($belanja_koperasi),
+                                                      "saldo_awal" => $value_dp["saldo_awal"],
+                                                      "total_penggunaan" => $value_dp["total_penggunaan"],
+                                                      "saldo_akhir" => $value_dp["saldo_akhir"],
+                                                      "status" => "Need Confirm",
+                                                      "id_belanja_keluarga" => $id_belanja_keluarga,
+                                                      "is_hutang" => "Tidak",
+                                                ];
+                                          }
+                                    }
+
+                                    if($sisa_penggunaan > 0){
+                                          // Saldo digital WBP kurang/habis, sisanya dicatat sebagai hutang
                                           $data_input[] = [
-                                                "id_uang_masuk" => $id_uang_masuk,
+                                                "id_uang_masuk" => NULL,
                                                 "tanggal" => date("Y-m-d H:i:s"),
                                                 "kode_tahanan" => $code_napi,
                                                 "penggunaan" => json_encode($belanja_koperasi),
-                                                "saldo_awal" => $value_dp["saldo_awal"],
-                                                "total_penggunaan" => $value_dp["total_penggunaan"],
-                                                "saldo_akhir" => $value_dp["saldo_akhir"],
+                                                "saldo_awal" => 0,
+                                                "total_penggunaan" => $sisa_penggunaan,
+                                                "saldo_akhir" => -$sisa_penggunaan,
                                                 "status" => "Need Confirm",
-                                                "id_belanja_keluarga" => date("YmdHis").$this->user_id,
+                                                "id_belanja_keluarga" => $id_belanja_keluarga,
+                                                "is_hutang" => "Ya",
                                           ];
                                     }
-                              }
 
-                              if(!empty($data_input)){
-                                    $action = $this->admin_model->insertimport("penggunaan_uang",$data_input);
-                                    if($action){
-                                          $this->swal("Sukses","Daftar belanja berhasil di order, silahkan tunggu konfirmasi dari admin kami.","success");
+                                    if(!empty($data_input)){
+                                          $action = $this->admin_model->insertimport("penggunaan_uang",$data_input);
+                                          if($action){
+                                                $this->admin_model->kurangi_stok($nama_barang, $qty);
+                                                $this->swal("Sukses","Daftar belanja berhasil di order, silahkan tunggu konfirmasi dari admin kami.","success");
+                                          }else{
+                                                $this->swal("Gagal","Daftar belanja gagal di order, silahkan coba kembali","error");
+                                          }
                                     }else{
-                                          $this->swal("Gagal","Daftar belanja gagal di order, silahkan coba kembali","error");
+                                          $this->swal("Gagal","Daftar Belanja tidak kosong","error");
                                     }
                               }else{
-                                    $this->swal("Gagal","Daftar Belanja tidak kosong","error");
+                                    // Penitip biasa (bukan keluarga inti): hanya boleh pakai dana yang
+                                    // dititipkan sendiri, tetap diblokir kalau tidak cukup (tidak ada hutang).
+                                    $riwayat_penyimpanan = $this->admin_model->get_data_select("penyimpanan_uang","id,jumlah_uang,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) as total_penggunaan,(jumlah_uang-IF((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) > 0,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id),0)) as sisa_uang","kode_tahanan = '$code_napi' AND nama_pengirim = '".$this->nama."' HAVING sisa_uang >= 1 AND id != '' ORDER BY tanggal DESC LIMIT 0,20","result");
+
+                                    $total_sisa_uang = $this->admin_model->get_data_select("penyimpanan_uang","SUM(jumlah_uang) as total_uang, SUM((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id)) as total_penggunaan","kode_tahanan = '$code_napi' AND nama_pengirim = '".$this->nama."' AND id != '' ORDER BY tanggal DESC LIMIT 0,20","row");
+
+                                    $total_sisa_uang_digital = $total_sisa_uang->total_uang - $total_sisa_uang->total_penggunaan;
+                                    if($total_sisa_uang_digital < $total_belanja){
+                                          $this->swal("Gagal","Gagal menyimpan, WBP hanya memiliki simpanan uang sebesar ".number_format($total_sisa_uang_digital,0,"","."),"error");
+                                    }else{
+                                          $data_penggunaan = [];
+                                          if(!empty($riwayat_penyimpanan)){
+                                                $sisa_penggunaan = $total_belanja;
+                                                foreach (array_reverse($riwayat_penyimpanan) as $rp) {
+                                                      if(!empty($rp->sisa_uang)){
+                                                            if($sisa_penggunaan > 0){
+                                                                  if($rp->sisa_uang > $sisa_penggunaan){
+                                                                        $data_penggunaan[$rp->id]["saldo_awal"] = $rp->sisa_uang;
+                                                                        $data_penggunaan[$rp->id]["total_penggunaan"] = $sisa_penggunaan;
+                                                                        $data_penggunaan[$rp->id]["saldo_akhir"] = $rp->sisa_uang-$sisa_penggunaan;
+                                                                        $sisa_penggunaan -= $sisa_penggunaan;
+                                                                  }else{
+                                                                        $data_penggunaan[$rp->id]["saldo_awal"] = $rp->sisa_uang;
+                                                                        $data_penggunaan[$rp->id]["total_penggunaan"] = $rp->sisa_uang;
+                                                                        $data_penggunaan[$rp->id]["saldo_akhir"] = 0;
+                                                                        $sisa_penggunaan -= $rp->sisa_uang;
+                                                                  }
+                                                            }
+                                                      }
+                                                }
+                                          }
+
+                                          $data_input = [];
+                                          if(!empty($data_penggunaan)){
+                                                foreach ($data_penggunaan as $id_uang_masuk => $value_dp) {
+                                                      $data_input[] = [
+                                                            "id_uang_masuk" => $id_uang_masuk,
+                                                            "tanggal" => date("Y-m-d H:i:s"),
+                                                            "kode_tahanan" => $code_napi,
+                                                            "penggunaan" => json_encode($belanja_koperasi),
+                                                            "saldo_awal" => $value_dp["saldo_awal"],
+                                                            "total_penggunaan" => $value_dp["total_penggunaan"],
+                                                            "saldo_akhir" => $value_dp["saldo_akhir"],
+                                                            "status" => "Need Confirm",
+                                                            "id_belanja_keluarga" => $id_belanja_keluarga,
+                                                            "is_hutang" => "Tidak",
+                                                      ];
+                                                }
+                                          }
+
+                                          if(!empty($data_input)){
+                                                $action = $this->admin_model->insertimport("penggunaan_uang",$data_input);
+                                                if($action){
+                                                      $this->admin_model->kurangi_stok($nama_barang, $qty);
+                                                      $this->swal("Sukses","Daftar belanja berhasil di order, silahkan tunggu konfirmasi dari admin kami.","success");
+                                                }else{
+                                                      $this->swal("Gagal","Daftar belanja gagal di order, silahkan coba kembali","error");
+                                                }
+                                          }else{
+                                                $this->swal("Gagal","Daftar Belanja tidak kosong","error");
+                                          }
+                                    }
                               }
                         }
                   }else{

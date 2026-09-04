@@ -2,11 +2,16 @@
 $kode_tahanan = $this->p2;
 $sisa_uang = $this->admin_model->get_data_select("penyimpanan_uang","SUM(jumlah_uang) as uang_masuk, (SELECT SUM(total_penggunaan) FROM penggunaan_uang WHERE kode_tahanan = '$kode_tahanan' AND status = 'Received') as uang_keluar","kode_tahanan = '$kode_tahanan'","row");
 $sisa = $sisa_uang->uang_masuk - $sisa_uang->uang_keluar;
+if($sisa < 0){
+    $sisa_display = '<span class="text-danger">-RP. '.number_format(abs($sisa),0,"",".").' (HUTANG)</span>';
+}else{
+    $sisa_display = "RP. ".number_format($sisa,0,"",".");
+}
 ?>
 <div class="row">
     <div class="col-12">
         <div class="w-100 text-right"><a href="<?= base_url("saku_wbp_monitor"); ?>" class="btn btn-sm btn-danger mb-2">Kembali</a></div>
-        <div class="w-100 text-right"><h5>Uang saat ini : <?= "RP. ".number_format($sisa,0,"","."); ?></h5></div>
+        <div class="w-100 text-right"><h5>Uang saat ini : <?= $sisa_display; ?></h5></div>
         <div class="table-responsive">
             <table class="table table-bordered table-small mb-1" style="font-size:7pt;">
                 <thead class="thead-light bg-light-info">
@@ -93,7 +98,7 @@ $sisa = $sisa_uang->uang_masuk - $sisa_uang->uang_keluar;
                     ?>
                 </tbody>
             </table>
-            <div class="w-100 text-right"><h5>Uang saat ini : <?= "RP. ".number_format($sisa,0,"","."); ?></h5></div>
+            <div class="w-100 text-right"><h5>Uang saat ini : <?= $sisa_display; ?></h5></div>
             <div class="w-100 text-right"><a href="<?= base_url("saku_wbp_monitor"); ?>" class="btn btn-sm btn-danger">Kembali</a></div>
         </div>
     </div>

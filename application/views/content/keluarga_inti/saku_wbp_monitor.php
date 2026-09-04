@@ -40,12 +40,17 @@ if(is_array(json_decode($this->kode_tahanan,true))){
                             $uang = $this->admin_model->get_data_select("penyimpanan_uang","SUM(jumlah_uang) as jumlah_uang","kode_tahanan = '".$dp["kode_tahanan"]."'","row");
                             $penggunaan_uang = $this->admin_model->get_data_select("penggunaan_uang","SUM(total_penggunaan) as total_penggunaan","kode_tahanan = '".$dp["kode_tahanan"]."' AND status = 'Received'","row");
                             $jumlah_uang = $uang->jumlah_uang - $penggunaan_uang->total_penggunaan;
-                            
+                            if($jumlah_uang < 0){
+                                $tampil_uang = '<span class="text-danger">-Rp. '.number_format(abs($jumlah_uang),0,"",".").' (HUTANG)</span>';
+                            }else{
+                                $tampil_uang = 'Rp. '.number_format($jumlah_uang,0,"",".");
+                            }
+
                             $load .= '
                             <tr>
                                 <td class="text-center align-middle">'.$no.'</td>
                                 <td class="text-center align-middle">'.$dp["nama_tahanan"].'</td>
-                                <td class="text-center align-middle">Rp. '.number_format($jumlah_uang,0,"",".").'<br><a href="'.base_url("rincian_saku_wbp/".$dp["kode_tahanan"]).'" class="btn btn-sm btn-success mt-2">Lihat Rincian</a></td>
+                                <td class="text-center align-middle">'.$tampil_uang.'<br><a href="'.base_url("rincian_saku_wbp/".$dp["kode_tahanan"]).'" class="btn btn-sm btn-success mt-2">Lihat Rincian</a></td>
                             </tr>';
                             $no++;
                         }
