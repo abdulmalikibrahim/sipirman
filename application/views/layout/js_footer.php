@@ -73,7 +73,10 @@
 			html:"<font style='color:white'>"+pesan+"</font>",
 			background:'rgba(0,0,0,0)',
 			showConfirmButton: false,
-			allowOutsideClick: false
+			allowOutsideClick: false,
+			// MODIFIKASI: tampilkan spinner asli SweetAlert2, sebelumnya popup ini
+			// cuma berisi teks tanpa animasi loading sama sekali.
+			didOpen: () => { swal.showLoading(); }
 		});
 	}
 </script>

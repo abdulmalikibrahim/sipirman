@@ -1,0 +1,857 @@
+/* ==========================================================================
+   SIPIRMAN - Modern UI (post-login panel)
+   ==========================================================================
+   Restyle-only stylesheet for the authenticated app shell (topbar, sidebar,
+   page content) shared by every role (Admin, Cashier, Keluarga Inti, Saku,
+   Super Admin). It is loaded INSTEAD of assets/css/style.css, assets/style.css
+   and assets/css/colors/blue.css for the post-login layout (see
+   application/views/layout/head.php) - those old files are left untouched
+   on disk and still power the public login page.
+
+   No markup was changed to build this: every rule below targets class names
+   and ids that already exist in application/views/layout/*.php and
+   application/views/content/**/*.php, so simply swapping the stylesheet
+   reference is enough to re-skin the whole panel.
+
+   A handful of rules use !important solely to win against inline
+   style="font-size:9pt" attributes baked into the existing sidebar markup -
+   that's the one place inline styles fight the cascade.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------- *
+ * 1. Design tokens
+ * ---------------------------------------------------------------------- */
+:root {
+  --sp-primary: #4f46e5;
+  --sp-primary-dark: #4338ca;
+  --sp-primary-light: #eef2ff;
+  --sp-primary-text: #ffffff;
+
+  --sp-sidebar-bg: #111827;
+  --sp-sidebar-bg-soft: #1a2233;
+  --sp-sidebar-active: #4f46e5;
+  --sp-sidebar-text: #9aa4b8;
+  --sp-sidebar-text-active: #ffffff;
+  --sp-sidebar-border: rgba(255, 255, 255, 0.06);
+
+  --sp-body-bg: #f3f4f8;
+  --sp-card-bg: #ffffff;
+  --sp-border: #e6e8ee;
+  --sp-text: #1f2430;
+  --sp-text-muted: #6b7280;
+
+  --sp-success: #10b981;
+  --sp-warning: #f59e0b;
+  --sp-danger: #ef4444;
+  --sp-info: #0ea5e9;
+  --sp-secondary: #64748b;
+
+  --sp-radius-lg: 1rem;
+  --sp-radius: 0.65rem;
+  --sp-radius-sm: 0.4rem;
+
+  --sp-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --sp-shadow: 0 2px 10px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.05);
+  --sp-shadow-md: 0 12px 24px -8px rgba(16, 24, 40, 0.16);
+
+  --sp-transition: 0.18s ease;
+  --sp-topbar-h: 64px;
+  --sp-sidebar-w: 250px;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 2. Base
+ * ---------------------------------------------------------------------- */
+body {
+  font-family: "Poppins", "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--sp-body-bg);
+  color: var(--sp-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+label {
+  font-family: "Poppins", "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+a {
+  color: var(--sp-primary);
+}
+a:hover {
+  color: var(--sp-primary-dark);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Poppins", "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 600;
+  color: var(--sp-text);
+}
+
+/* Slim modern scrollbars everywhere (Webkit + Firefox) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c7cbd4 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #c7cbd4;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 3. App shell / page wrapper
+ * ---------------------------------------------------------------------- */
+#main-wrapper {
+  background: var(--sp-body-bg);
+}
+
+.page-wrapper {
+  background: var(--sp-body-bg);
+  padding-top: calc(var(--sp-topbar-h) + 12px);
+  margin-left: var(--sp-sidebar-w);
+  min-height: 100vh;
+  transition: margin var(--sp-transition);
+}
+
+.container-fluid {
+  max-width: 1600px;
+}
+
+/* Every "row" holding a wide table gets a safety scroll rail so a wide
+   table never blows out the page horizontally on small screens - none of
+   the existing markup needs to change for this. */
+.table-responsive,
+.container-fluid > .row {
+  overflow-x: auto;
+}
+
+.page-titles {
+  background: var(--sp-card-bg);
+  border-radius: var(--sp-radius);
+  box-shadow: var(--sp-shadow-sm);
+  margin-bottom: 1.25rem !important;
+  border: 1px solid var(--sp-border);
+}
+.page-titles h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 4. Topbar
+ * ---------------------------------------------------------------------- */
+.topbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: var(--sp-sidebar-w);
+  height: var(--sp-topbar-h);
+  z-index: 50;
+  background: var(--sp-card-bg);
+  border-bottom: 1px solid var(--sp-border);
+  box-shadow: var(--sp-shadow-sm);
+  transition: left var(--sp-transition);
+}
+.topbar .navbar {
+  height: 100%;
+  padding: 0 1.25rem;
+}
+.topbar .navbar-header {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+.topbar .navbar-brand img {
+  max-height: 34px;
+}
+.topbar .navbar-collapse {
+  display: flex !important;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+}
+.topbar .nav-toggler {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-text) !important;
+  transition: background var(--sp-transition);
+}
+.topbar .nav-toggler:hover {
+  background: var(--sp-body-bg);
+}
+.topbar .nav-link {
+  color: var(--sp-text-muted) !important;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: var(--sp-radius-sm);
+  padding: 0.4rem 0.7rem !important;
+  transition: background var(--sp-transition), color var(--sp-transition);
+}
+.topbar .nav-link:hover {
+  background: var(--sp-primary-light);
+  color: var(--sp-primary) !important;
+}
+.topbar .nav-item.dropdown .nav-link i {
+  font-size: 1rem;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 5. Sidebar
+ * ---------------------------------------------------------------------- */
+.left-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sp-sidebar-w);
+  background: var(--sp-sidebar-bg);
+  z-index: 60;
+  transition: transform var(--sp-transition), width var(--sp-transition);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Little brand strip at the top of the sidebar, purely CSS (::before),
+   so no markup change is needed to get a logo/wordmark area. */
+.left-sidebar::before {
+  content: "SIPIRMAN";
+  display: block;
+  flex: 0 0 var(--sp-topbar-h);
+  line-height: var(--sp-topbar-h);
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  text-align: center;
+  background: var(--sp-sidebar-bg-soft);
+  border-bottom: 1px solid var(--sp-sidebar-border);
+}
+
+.scroll-sidebar {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0.75rem 0.75rem 2rem;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sidebar-nav > ul > li {
+  margin-bottom: 2px;
+}
+
+.sidebar-nav a {
+  display: flex !important;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.8rem !important;
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-sidebar-text) !important;
+  font-size: 0.85rem !important;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background var(--sp-transition), color var(--sp-transition);
+  white-space: normal;
+  line-height: 1.25;
+}
+.sidebar-nav a > i,
+.sidebar-nav a > .mdi,
+.sidebar-nav a > svg {
+  flex: 0 0 20px;
+  width: 20px;
+  text-align: center;
+  font-size: 1.05rem !important;
+}
+.sidebar-nav .hide-menu {
+  font-size: 0.85rem !important;
+  color: inherit !important;
+}
+.sidebar-nav a:hover {
+  background: var(--sp-sidebar-bg-soft);
+  color: var(--sp-sidebar-text-active) !important;
+}
+
+/* Active leaf/parent link - keeps the same markup, just gives whichever
+   link matches the current URL a strong accent so users always know where
+   they are. */
+.sidebar-nav a.active,
+.sidebar-nav li.active > a {
+  background: var(--sp-sidebar-active);
+  color: var(--sp-sidebar-text-active) !important;
+}
+
+/* Collapsible "Dashboard" style submenu (has-arrow / aria-expanded) */
+.sidebar-nav .has-arrow {
+  position: relative;
+}
+.sidebar-nav .has-arrow::after {
+  content: "\f078";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  font-size: 0.6rem;
+  margin-left: auto;
+  transition: transform var(--sp-transition);
+  opacity: 0.7;
+}
+.sidebar-nav .has-arrow[aria-expanded="true"]::after {
+  transform: rotate(180deg);
+}
+.sidebar-nav ul ul {
+  padding-left: 0.5rem;
+  margin: 2px 0 6px;
+}
+.sidebar-nav ul ul li a {
+  padding: 0.5rem 0.8rem 0.5rem 2.3rem !important;
+  font-size: 0.8rem !important;
+  opacity: 0.9;
+}
+.sidebar-nav ul ul li a::before {
+  content: "";
+  position: absolute;
+  left: 1.5rem;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+/* Little unread-style badge/notification icon used for "Konfirmasi Belanja" */
+.sidebar-nav a .fa-bounce {
+  animation: sp-bounce 1.1s infinite;
+}
+@keyframes sp-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* ---------------------------------------------------------------------- *
+ * 6. Responsive: off-canvas sidebar on small screens
+ * ---------------------------------------------------------------------- */
+@media (max-width: 991.98px) {
+  .page-wrapper {
+    margin-left: 0;
+  }
+  .topbar {
+    left: 0;
+  }
+  .left-sidebar {
+    transform: translateX(-100%);
+    box-shadow: var(--sp-shadow-md);
+  }
+  body.show-sidebar .left-sidebar {
+    transform: translateX(0);
+  }
+  /* Dim the page behind the drawer when it's open - pure CSS, no markup
+     needed. Tap the hamburger again (existing behaviour) to close it. */
+  body.show-sidebar::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 55;
+  }
+}
+
+/* Desktop "mini" (icon-only) sidebar mode, toggled the same way the
+   original template did it (body.mini-sidebar). */
+@media (min-width: 992px) {
+  body.mini-sidebar .left-sidebar {
+    width: 76px;
+  }
+  body.mini-sidebar .left-sidebar::before {
+    font-size: 0;
+  }
+  body.mini-sidebar .left-sidebar::before::after {
+    content: "SP";
+    font-size: 1rem;
+  }
+  body.mini-sidebar .sidebar-nav .hide-menu,
+  body.mini-sidebar .sidebar-nav .has-arrow::after {
+    display: none;
+  }
+  body.mini-sidebar .sidebar-nav a {
+    justify-content: center;
+  }
+  body.mini-sidebar .page-wrapper,
+  body.mini-sidebar .topbar {
+    margin-left: 76px;
+    left: 76px;
+  }
+}
+
+/* ---------------------------------------------------------------------- *
+ * 7. Cards / dashboard stat cards
+ * ---------------------------------------------------------------------- */
+.card {
+  background: var(--sp-card-bg);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  box-shadow: var(--sp-shadow-sm);
+  transition: box-shadow var(--sp-transition), transform var(--sp-transition);
+}
+a .card:hover,
+.card:hover {
+  box-shadow: var(--sp-shadow);
+}
+.card-body {
+  padding: 1.1rem 1.25rem;
+}
+
+/* The dashboard stat-card pattern used throughout home.php / home_dashboard.php:
+   <div class="card"><div class="card-body"><div class="row">
+     <div class="col-* bg-info ..."><i class="... icon"></i></div>
+     <div class="col-*"><h1 class="poppins">123</h1><label class="tag-label">...</label></div>
+   </row></div></div>  */
+.card .bg-info,
+.card .bg-success,
+.card .bg-warning,
+.card .bg-danger,
+.card .bg-primary,
+.card .bg-secondary {
+  border-radius: var(--sp-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 74px;
+}
+.card .icon {
+  font-size: 1.9rem !important;
+  margin: 0 !important;
+}
+.card .poppins {
+  font-size: 1.5rem !important;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+.card .tag-label {
+  font-size: 0.72rem !important;
+  color: var(--sp-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+/* Stat cards double as links in a few places (cstatus?s=...) - kill the
+   default link underline/color so they still read as cards, not text links. */
+a:has(> .card) {
+  text-decoration: none;
+  display: block;
+}
+
+.card-fitur {
+  border-radius: var(--sp-radius);
+  border: 1px solid var(--sp-border);
+  box-shadow: var(--sp-shadow-sm);
+}
+
+/* ---------------------------------------------------------------------- *
+ * 8. Buttons
+ * ---------------------------------------------------------------------- */
+.btn {
+  border-radius: var(--sp-radius-sm);
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 0.45rem 1rem;
+  transition: filter var(--sp-transition), transform var(--sp-transition), box-shadow var(--sp-transition);
+  border: 1px solid transparent;
+}
+.btn:hover {
+  filter: brightness(0.94);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-sm {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  border-radius: var(--sp-radius-sm);
+}
+.btn-info { background: var(--sp-info); border-color: var(--sp-info); }
+.btn-success { background: var(--sp-success); border-color: var(--sp-success); }
+.btn-warning { background: var(--sp-warning); border-color: var(--sp-warning); color: #fff; }
+.btn-danger { background: var(--sp-danger); border-color: var(--sp-danger); }
+.btn-secondary { background: var(--sp-secondary); border-color: var(--sp-secondary); }
+.btn-primary { background: var(--sp-primary); border-color: var(--sp-primary); }
+.btn-success, .btn-danger, .btn-info, .btn-warning, .btn-primary, .btn-secondary {
+  color: #fff;
+}
+.btn-success:hover, .btn-danger:hover, .btn-info:hover, .btn-warning:hover,
+.btn-primary:hover, .btn-secondary:hover {
+  color: #fff;
+}
+.btn.shadow-sm, .btn-menu {
+  box-shadow: var(--sp-shadow-sm);
+}
+
+/* ---------------------------------------------------------------------- *
+ * 9. Tables
+ * ---------------------------------------------------------------------- */
+.table {
+  color: var(--sp-text);
+  background: var(--sp-card-bg);
+  margin-bottom: 0;
+}
+.table-bordered,
+.table-bordered th,
+.table-bordered td {
+  border-color: var(--sp-border) !important;
+}
+.table thead.thead-light th,
+.table .bg-light-info {
+  background: #f5f6fa !important;
+  color: var(--sp-text);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom-width: 1px !important;
+  vertical-align: middle;
+}
+.table tbody tr {
+  transition: background var(--sp-transition);
+}
+.table tbody tr:hover {
+  background: #f8f9fc;
+}
+.table td, .table th {
+  padding: 0.65rem 0.75rem;
+  vertical-align: middle;
+}
+.table-small {
+  font-size: 0.8rem;
+}
+.table-small th {
+  text-align: center;
+}
+/* A bare <table> (no .table-bordered wrapper card) still gets a light
+   card-style frame so lists don't look like unstyled browser defaults. */
+#datatable, table.table {
+  border-radius: var(--sp-radius-sm);
+  overflow: hidden;
+}
+
+/* DataTables chrome (search box / length menu / pagination) - injected by
+   the jquery.dataTables plugin already loaded in js_footer.php. */
+.dataTables_wrapper {
+  padding-top: 0.25rem;
+}
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-sm);
+  padding: 0.3rem 0.6rem;
+}
+.dataTables_wrapper .dataTables_filter input:focus,
+.dataTables_wrapper .dataTables_length select:focus {
+  outline: none;
+  border-color: var(--sp-primary);
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  border-radius: var(--sp-radius-sm) !important;
+  border: 1px solid transparent !important;
+  margin-left: 2px;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: var(--sp-primary) !important;
+  border-color: var(--sp-primary) !important;
+  color: #fff !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--sp-primary-light) !important;
+  border-color: var(--sp-primary-light) !important;
+  color: var(--sp-primary) !important;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 10. Badges
+ * ---------------------------------------------------------------------- */
+.badge {
+  font-weight: 600;
+  font-size: 0.72rem;
+  padding: 0.35em 0.65em;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+}
+.badge-success { background: #d1fae5; color: #065f46; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-danger  { background: #fee2e2; color: #991b1b; }
+.badge-info    { background: #e0f2fe; color: #075985; }
+.badge-secondary { background: #e5e7eb; color: #374151; }
+.badge-primary { background: var(--sp-primary-light); color: var(--sp-primary-dark); }
+
+/* ---------------------------------------------------------------------- *
+ * 11. Forms
+ * ---------------------------------------------------------------------- */
+.form-control {
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-sm);
+  font-size: 0.88rem;
+  padding: 0.5rem 0.75rem;
+  height: auto;
+  transition: border-color var(--sp-transition), box-shadow var(--sp-transition);
+}
+.form-control:focus {
+  border-color: var(--sp-primary);
+  box-shadow: 0 0 0 3px var(--sp-primary-light);
+}
+.form-group label {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--sp-text-muted);
+}
+.custom-my-file {
+  border: 1px dashed var(--sp-border);
+  transition: border-color var(--sp-transition);
+}
+.custom-my-file:hover {
+  border-color: var(--sp-primary);
+}
+select.form-control {
+  background-color: #fff;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 12. Modals
+ * ---------------------------------------------------------------------- */
+.modal-content {
+  border: none;
+  border-radius: var(--sp-radius);
+  box-shadow: var(--sp-shadow-md);
+  overflow: hidden;
+}
+.modal-header {
+  background: var(--sp-card-bg);
+  border-bottom: 1px solid var(--sp-border);
+  padding: 1rem 1.25rem;
+}
+.modal-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.modal-body {
+  padding: 1.25rem;
+}
+.modal-footer {
+  border-top: 1px solid var(--sp-border);
+  padding: 0.85rem 1.25rem;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 13. Custom checkbox ("Checklist Data Titipan" in home.php / get_data_resi)
+ * ---------------------------------------------------------------------- */
+.container-check {
+  display: block;
+  position: relative;
+  padding-left: 34px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  text-align: left;
+  user-select: none;
+}
+.container-check input {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  width: 0;
+}
+.checkmark {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  height: 22px;
+  width: 22px;
+  background: #fff;
+  border-radius: 6px;
+  border: 2px solid var(--sp-border);
+  transition: background var(--sp-transition), border-color var(--sp-transition);
+}
+.container-check:hover input ~ .checkmark {
+  border-color: var(--sp-primary);
+}
+.container-check input:checked ~ .checkmark {
+  background: var(--sp-primary);
+  border-color: var(--sp-primary);
+}
+.checkmark::after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.container-check input:checked ~ .checkmark::after {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 14. Tracking timeline ("Tracking Barang Titipan" - .events)
+ * ---------------------------------------------------------------------- */
+.events { margin-top: 1em; padding-left: 10px; width: 100%; }
+.events li {
+  display: flex;
+  color: var(--sp-text-muted);
+  font-size: 0.85rem;
+}
+.events time { position: relative; padding: 0 1.5em; }
+.events .timenotactive::after,
+.events .timeactive::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  top: 0;
+  transform: translateX(50%);
+  border-radius: 50%;
+  width: 1.6em;
+  height: 1.6em;
+  border: 2px solid;
+}
+.events .timenotactive::after {
+  background: #fff;
+  border-color: var(--sp-border);
+}
+.events .timeactive::after {
+  background: var(--sp-success);
+  border-color: var(--sp-success);
+}
+.events span { padding: 0 1.5em 1.5em 1.5em; position: relative; }
+.events span::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  height: 100%;
+  border-left: 2px dashed var(--sp-border);
+}
+.events strong { display: block; font-weight: 600; color: var(--sp-text); }
+
+/* ---------------------------------------------------------------------- *
+ * 15. Loading indicators
+ * ---------------------------------------------------------------------- */
+/* The Wedges.svg spinner used by #loader-checklist-titipan (home.php),
+   data_input.php and penyimpanan_input.php - targeted by its file name so
+   no view markup needs a new class. */
+img[src*="Wedges.svg"] {
+  width: 64px !important;
+  opacity: 0.85;
+}
+
+/* SweetAlert2 popup (loading_page() / swal() in js_footer.php + MY_Controller) */
+.swal2-popup {
+  border-radius: var(--sp-radius-lg) !important;
+  font-family: "Poppins", "Segoe UI", Roboto, Arial, sans-serif !important;
+}
+.swal2-title {
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+}
+.swal2-styled.swal2-confirm {
+  background: var(--sp-primary) !important;
+  border-radius: var(--sp-radius-sm) !important;
+}
+.swal2-styled.swal2-cancel {
+  border-radius: var(--sp-radius-sm) !important;
+}
+/* loading_page() (js_footer.php) renders a transparent full-screen "please
+   wait" popup with Swal.showLoading() - restyle its built-in spinner to
+   match the app's accent color instead of SweetAlert2's default gray. */
+.swal2-popup .swal2-loader {
+  border-color: var(--sp-primary) transparent var(--sp-primary) transparent !important;
+}
+
+/* Small reusable spinner utility, in case a future view wants a plain CSS
+   spinner instead of an <img>. */
+.sp-spinner {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 3px solid var(--sp-primary-light);
+  border-top-color: var(--sp-primary);
+  border-radius: 50%;
+  animation: sp-spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes sp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------------------------------------------------------------------- *
+ * 16. Misc utility classes carried over from assets/style.css
+ * ---------------------------------------------------------------------- */
+.poppins {
+  font-family: "Poppins", sans-serif;
+}
+.bg-img {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  background-size: cover;
+}
+.grayBox { background-color: var(--sp-body-bg); border-radius: var(--sp-radius-sm); }
+.hh-grayBox { background-color: var(--sp-body-bg); margin: 20px 0; padding: 10px; border-radius: var(--sp-radius-sm); }
+.pt45 { padding-top: 45px; }
+.cut-text {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-height: 1.5em;
+  white-space: nowrap;
+}
+.icon-aksi {
+  font-size: 1.15rem !important;
+  color: var(--sp-text-muted);
+  transition: color var(--sp-transition), transform var(--sp-transition);
+}
+.icon-aksi:hover {
+  color: var(--sp-primary);
+  transform: scale(1.1);
+}
+a .icon-aksi.text-danger:hover { color: var(--sp-danger); }
+
+/* ---------------------------------------------------------------------- *
+ * 17. Footer
+ * ---------------------------------------------------------------------- */
+.footer {
+  margin-left: var(--sp-sidebar-w);
+  background: transparent;
+  color: var(--sp-text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  transition: margin var(--sp-transition);
+}
+.footer a { color: var(--sp-primary); }
+@media (max-width: 991.98px) {
+  .footer { margin-left: 0; }
+}
+body.mini-sidebar .footer {
+  margin-left: 76px;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 18. Small screens
+ * ---------------------------------------------------------------------- */
+@media (max-width: 575.98px) {
+  .page-wrapper { padding-top: calc(var(--sp-topbar-h) + 8px); }
+  .card-body { padding: 0.9rem; }
+  .topbar .navbar { padding: 0 0.75rem; }
+}

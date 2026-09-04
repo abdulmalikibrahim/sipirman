@@ -21,10 +21,15 @@ if(empty($this->nama)){
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <!--This page css - Morris CSS -->
 <link href="<?= base_url("assets/plugins/c3-master/c3.min.css") ?>" rel="stylesheet">
-<!-- Custom CSS -->
-<link href="<?= base_url("assets/css/style.css") ?>" rel="stylesheet">
-<link href="<?= base_url("assets/style.css") ?>" rel="stylesheet">
-<!-- You can change the theme colors from here -->
-<link href="<?= base_url("assets/css/colors/blue.css") ?>" id="theme" rel="stylesheet">
+<!-- Material Design Icons (standalone, self-contained font+css - kept independent
+     of the old assets/css/style.css bundle so "mdi mdi-*" icons across the app
+     keep working after switching to the new theme below) -->
+<link href="<?= base_url("assets/scss/icons/material-design-iconic-font/css/materialdesignicons.min.css") ?>" rel="stylesheet">
+<!-- MODIFIKASI: tampilan panel setelah login dirombak - assets/css/style.css,
+     assets/style.css dan assets/css/colors/blue.css (tema lama) SENGAJA
+     dibiarkan ada di folder assets/ tapi tidak lagi dipakai di sini; lihat
+     assets/css/sipirman-modern.css untuk tema barunya. -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="<?= base_url("assets/css/sipirman-modern.css") ?>" rel="stylesheet">
