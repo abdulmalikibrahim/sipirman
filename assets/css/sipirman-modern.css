@@ -27,12 +27,12 @@
   --sp-primary-light: #eef2ff;
   --sp-primary-text: #ffffff;
 
-  --sp-sidebar-bg: #111827;
-  --sp-sidebar-bg-soft: #1a2233;
-  --sp-sidebar-active: #4f46e5;
-  --sp-sidebar-text: #9aa4b8;
-  --sp-sidebar-text-active: #ffffff;
-  --sp-sidebar-border: rgba(255, 255, 255, 0.06);
+  --sp-sidebar-bg: #ffffff;
+  --sp-sidebar-bg-soft: #eef4ff;
+  --sp-sidebar-active: #2563eb;
+  --sp-sidebar-text: #55617a;
+  --sp-sidebar-text-active: #2563eb;
+  --sp-sidebar-border: #e6ecf7;
 
   --sp-body-bg: #f3f4f8;
   --sp-card-bg: #ffffff;
@@ -130,17 +130,25 @@ h1, h2, h3, h4, h5, h6 {
   overflow-x: auto;
 }
 
+/* Page header - appears at the top of every single content page (home.php,
+   data.php, penyimpanan.php, ...) since layout/index.php always renders it
+   right above <?= $title ?>. Flush, flat header bar with a colored accent
+   instead of a "floating white pill" so it reads as part of one continuous
+   header together with the topbar above it, not a disconnected second bar. */
 .page-titles {
   background: var(--sp-card-bg);
-  border-radius: var(--sp-radius);
+  border-bottom: 1px solid var(--sp-border);
+  border-left: 3px solid var(--sp-primary);
+  border-radius: 0 var(--sp-radius-sm) var(--sp-radius-sm) 0;
+  padding: 0.9rem 1.25rem !important;
+  margin: -12px -15px 1.5rem !important;
   box-shadow: var(--sp-shadow-sm);
-  margin-bottom: 1.25rem !important;
-  border: 1px solid var(--sp-border);
 }
 .page-titles h3 {
   font-size: 1.15rem;
   font-weight: 600;
   margin: 0;
+  letter-spacing: 0.01em;
 }
 
 /* ---------------------------------------------------------------------- *
@@ -166,9 +174,28 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   height: 100%;
+  padding-right: 1rem;
+  margin-right: 0.5rem;
+  border-right: 1px solid var(--sp-border);
+}
+.topbar .navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
 }
 .topbar .navbar-brand img {
-  max-height: 34px;
+  max-height: 32px;
+  border-radius: 50%;
+}
+/* The logo alone reads as an empty avatar floating in a lot of white space -
+   pair it with the app name so the left edge of the header looks intentional. */
+.topbar .navbar-brand::after {
+  content: "SIPIRMAN";
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--sp-text);
+  letter-spacing: 0.02em;
 }
 .topbar .navbar-collapse {
   display: flex !important;
@@ -217,6 +244,8 @@ h1, h2, h3, h4, h5, h6 {
   bottom: 0;
   width: var(--sp-sidebar-w);
   background: var(--sp-sidebar-bg);
+  border-right: 1px solid var(--sp-sidebar-border);
+  box-shadow: var(--sp-shadow-sm);
   z-index: 60;
   transition: transform var(--sp-transition), width var(--sp-transition);
   display: flex;
@@ -224,7 +253,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Little brand strip at the top of the sidebar, purely CSS (::before),
-   so no markup change is needed to get a logo/wordmark area. */
+   so no markup change is needed to get a logo/wordmark area. Kept as a
+   solid blue accent even though the rest of the sidebar is white/light. */
 .left-sidebar::before {
   content: "SIPIRMAN";
   display: block;
@@ -236,7 +266,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1.05rem;
   letter-spacing: 0.03em;
   text-align: center;
-  background: var(--sp-sidebar-bg-soft);
+  background: linear-gradient(135deg, var(--sp-primary), var(--sp-sidebar-active));
   border-bottom: 1px solid var(--sp-sidebar-border);
 }
 
@@ -288,14 +318,30 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Active leaf/parent link - keeps the same markup, just gives whichever
    link matches the current URL a strong accent so users always know where
-   they are. */
+   they are. White text here (not --sp-sidebar-text-active, which is the
+   same blue as the fill and would disappear on it). */
 .sidebar-nav a.active,
 .sidebar-nav li.active > a {
   background: var(--sp-sidebar-active);
-  color: var(--sp-sidebar-text-active) !important;
+  color: #fff !important;
+}
+.sidebar-nav a.active > i,
+.sidebar-nav li.active > a > i {
+  color: #fff;
 }
 
-/* Collapsible "Dashboard" style submenu (has-arrow / aria-expanded) */
+/* Collapsible "Dashboard" style submenu (has-arrow / aria-expanded).
+   assets/js/sidebarmenu.js is a MetisMenu port written for Bootstrap 3: when
+   it expands a submenu it adds classes "collapse in" (Bootstrap 3's syntax
+   for "visible"). Bootstrap 4 (loaded here) only knows ".collapse.show" -
+   ".collapse.in" matches no rule of its own, so it stays "display:none" from
+   the base ".collapse" rule and the submenu never actually appears, even
+   though the JS "opened" it and the chevron above rotated. The old theme's
+   compiled CSS carried the exact same bridge rule below; restoring it here
+   is what makes the Dashboard > Pendaftaran/P2U/Komandan submenu open. */
+.collapse.in {
+  display: block;
+}
 .sidebar-nav .has-arrow {
   position: relative;
 }
