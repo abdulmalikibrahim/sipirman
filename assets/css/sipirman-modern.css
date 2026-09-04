@@ -463,47 +463,185 @@ a .card:hover,
    <div class="card"><div class="card-body"><div class="row">
      <div class="col-* bg-info ..."><i class="... icon"></i></div>
      <div class="col-*"><h1 class="poppins">123</h1><label class="tag-label">...</label></div>
-   </row></div></div>  */
+   </row></div></div>
+   The icon block used to be a big solid-color rectangle spanning the full
+   card height; this makes it a smaller rounded tinted tile instead, and
+   gives the card itself a hover lift since these are almost always links. */
+a:has(.card) {
+  display: block;
+}
+a:has(.card):hover .card {
+  transform: translateY(-2px);
+  box-shadow: var(--sp-shadow-md);
+}
+.card > .card-body > .row {
+  align-items: center;
+}
 .card .bg-info,
 .card .bg-success,
 .card .bg-warning,
 .card .bg-danger,
 .card .bg-primary,
 .card .bg-secondary {
-  border-radius: var(--sp-radius-sm);
+  border-radius: var(--sp-radius);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 74px;
+  aspect-ratio: 1 / 1;
+  max-width: 64px;
+  margin: 0 auto;
+  background: var(--sp-primary-light) !important;
 }
+.card .bg-info .icon,
+.card .bg-success .icon,
+.card .bg-warning .icon,
+.card .bg-danger .icon,
+.card .bg-primary .icon,
+.card .bg-secondary .icon {
+  color: var(--sp-primary) !important;
+}
+/* Give each of the 4 workflow-stage stat cards (Menunggu -> Diterima P2U ->
+   Diterima Komandan -> Selesai) its own accent so they read as a
+   progression rather than 4 identical blue tiles - all 4 currently share
+   the exact same "bg-info" class in the markup, this is the only way to
+   tell them apart without editing the view. Scoped to the specific 4-level
+   row>col-12>row>col-3-or-4 nesting the dashboard summary cards use, so it
+   won't catch unrelated col-lg-3/4 usage elsewhere in the app. */
+.row > .col-lg-12 > .row > div:nth-of-type(1) .bg-info,
+.row > .col-lg-12 > .row > div:nth-of-type(1) .bg-success {
+  background: #fef3c7 !important;
+}
+.row > .col-lg-12 > .row > div:nth-of-type(1) .icon { color: var(--sp-warning) !important; }
+.row > .col-lg-12 > .row > div:nth-of-type(2) .bg-info {
+  background: #dbeafe !important;
+}
+.row > .col-lg-12 > .row > div:nth-of-type(2) .icon { color: var(--sp-info) !important; }
+.row > .col-lg-12 > .row > div:nth-of-type(3) .bg-info {
+  background: #ede9fe !important;
+}
+.row > .col-lg-12 > .row > div:nth-of-type(3) .icon { color: #7c3aed !important; }
+.row > .col-lg-12 > .row > div:nth-of-type(4) .bg-info,
+.row > .col-lg-12 > .row > div:nth-of-type(4) .bg-success {
+  background: #d1fae5 !important;
+}
+.row > .col-lg-12 > .row > div:nth-of-type(4) .icon { color: var(--sp-success) !important; }
+
 .card .icon {
-  font-size: 1.9rem !important;
+  font-size: 1.5rem !important;
   margin: 0 !important;
 }
 .card .poppins {
-  font-size: 1.5rem !important;
+  font-size: 1.6rem !important;
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
 }
 .card .tag-label {
-  font-size: 0.72rem !important;
+  font-size: 0.7rem !important;
   color: var(--sp-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   font-weight: 600;
 }
 /* Stat cards double as links in a few places (cstatus?s=...) - kill the
-   default link underline/color so they still read as cards, not text links. */
-a:has(> .card) {
+   default link underline/color so they still read as cards, not text links
+   (display:block + hover lift is set earlier, next to the icon-tile rules). */
+a:has(.card) {
   text-decoration: none;
-  display: block;
 }
 
 .card-fitur {
   border-radius: var(--sp-radius);
   border: 1px solid var(--sp-border);
   box-shadow: var(--sp-shadow-sm);
+}
+
+/* Card header (e.g. "Data Penitip" / "Detail WBP Penerima" in data_input.php) */
+.card-header {
+  background: var(--sp-body-bg) !important;
+  border-bottom: 1px solid var(--sp-border) !important;
+  border-radius: var(--sp-radius) var(--sp-radius) 0 0 !important;
+}
+.card-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* A <div class="card"> directly followed by another <div class="row"> (the
+   next form field/section) has no gap between them by default - only the
+   "mb-3" utility already on some of those rows adds space AFTER themselves,
+   none add space before. Consistently gap every card away from whatever
+   comes next inside a form. */
+form .card {
+  margin-bottom: 1.25rem;
+}
+
+/* Read-only "label caption + value" pairs, used identically in both the
+   "Data Penitip" and "Detail WBP Penerima" cards in data_input.php:
+   <div class="col-lg-12 font-bold">NIK</div>
+   <div class="col-lg-12" id="d-nik">-</div>
+   Restyled as a proper label/value stack instead of two plain text lines. */
+.font-bold {
+  font-size: 0.72rem;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sp-text-muted);
+  margin-top: 0.6rem;
+}
+.font-bold:first-child {
+  margin-top: 0;
+}
+.font-bold + div {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--sp-text);
+}
+
+/* Bootstrap 4's .form-check-input relies on a negative left margin to sit
+   inside .form-check-label's padding - this build has two conflicting
+   copies of that rule (one absolute+negative-margin, one relative), and
+   whichever wins can push the checkbox outside the card's edge (the
+   "Keluarga Inti" checkbox in data_input.php). Pin it down explicitly with
+   a simple flex layout instead of relying on either. */
+.form-check {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto !important;
+  justify-content: flex-start !important;
+  margin: 0.75rem 0 0 !important;
+}
+.form-check-input {
+  position: relative !important;
+  margin: 0 !important;
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.form-check-label {
+  padding-left: 0 !important;
+  margin-bottom: 0 !important;
+  font-size: 0.9rem;
+  color: var(--sp-text);
+  cursor: pointer;
+}
+
+/* Photo preview boxes (Foto Diri / Foto KTP / Foto KK / Surat Pernyataan) -
+   plain <img> tags with no frame, so a missing/placeholder image reads as a
+   tiny broken-image icon floating on white. Give them a defined, centered
+   frame that looks intentional whether or not a photo has loaded yet. */
+.img-foto, .img-ktp, .img-kk, .img-super {
+  display: block;
+  width: 100% !important;
+  max-width: 260px;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  margin: 0 auto;
+  background: var(--sp-body-bg);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-sm);
+  padding: 0.35rem;
 }
 
 /* ---------------------------------------------------------------------- *
@@ -661,15 +799,175 @@ a:has(> .card) {
   font-size: 0.85rem;
   color: var(--sp-text-muted);
 }
+/* Photo-upload dropzone (foto bukti serah terima di home.php, 4 foto di
+   modal Tambah Data Penitip, foto barang koperasi Cashier, dst): the file
+   <input> and its <img> preview are both absolutely positioned with
+   height:100% inline in the markup, which needs .custom-my-file itself to
+   actually have a height to be 100% of - it used to get height:220px from
+   the old theme's compiled CSS. Without it the box collapses to almost
+   nothing (just the file input's own intrinsic height) and the preview
+   image renders squashed. */
 .custom-my-file {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
   border: 1px dashed var(--sp-border);
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-body-bg);
   transition: border-color var(--sp-transition);
 }
 .custom-my-file:hover {
   border-color: var(--sp-primary);
 }
+.custom-my-file img {
+  object-fit: contain;
+}
 select.form-control {
   background-color: #fff;
+}
+
+/* ---------------------------------------------------------------------- *
+ * 11b. "Update Status Penitipan" panel (home.php - P2U/Komandan dashboards)
+ * ---------------------------------------------------------------------- */
+/* The whole #form-update-status form used to sit directly on the page
+   background with no container of its own - wrap it in a card shell so the
+   resi lookup + checklist read as one panel instead of loose floating
+   fields. */
+#form-update-status {
+  background: var(--sp-card-bg);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  box-shadow: var(--sp-shadow-sm);
+  padding: 1.5rem;
+}
+#form-update-status > .row > div[align="center"] > h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: left !important;
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--sp-border);
+}
+#no-resi {
+  font-size: 1.05rem !important;
+  text-align: left !important;
+  padding-left: 1rem !important;
+}
+
+/* "Foto Bukti Penerimaan Barang" / "Pesan dari penitip" / "Pesan untuk
+   penitip" columns (Komandan mode, home.php): their h5 headings wrap to a
+   different number of lines depending on column width, so their content
+   below started at different heights. Pin every heading in this row to the
+   same height so the boxes/text underneath line up regardless of wrap. */
+#col-foto-pesan h5 {
+  min-height: 2.6em;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+#col-foto-pesan textarea.form-control {
+  min-height: 220px;
+}
+#pesan_penitip {
+  background: var(--sp-body-bg);
+  border-radius: var(--sp-radius-sm);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--sp-text);
+}
+
+/* Everything from here down is injected as a raw HTML string by
+   get_data_resi() (My_control.php) once a resi number is typed - built with
+   plain <h4>/<p>/<ul><li> and a couple of inline styles, so it's restyled
+   purely by tag/id rather than by any class added on purpose. */
+#checklist-data-titipan {
+  margin-top: 1rem;
+  text-align: left;
+}
+#checklist-data-titipan h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sp-text);
+  margin: 1.1rem 0 0.6rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--sp-border);
+}
+#checklist-data-titipan h4:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+#checklist-data-titipan p {
+  font-size: 0.85rem;
+  color: var(--sp-text-muted);
+  margin: 0.15rem 0;
+}
+#checklist-data-titipan ul {
+  padding-left: 0 !important;
+  margin: 0;
+}
+#checklist-data-titipan ul li {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0;
+  font-size: 0.85rem !important;
+  border-bottom: 1px dashed var(--sp-border);
+}
+#checklist-data-titipan ul li:last-child {
+  border-bottom: none;
+}
+/* The "Titipan Masuk Penyimpanan" list marks each line with a Unicode
+   checkbox glyph inside <font class="text-warning|text-success">. Turn
+   those into small rounded badges instead of bare colored characters. */
+#checklist-data-titipan ul li font {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4em;
+  height: 1.4em;
+  border-radius: 50%;
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+#checklist-data-titipan ul li font.text-warning {
+  background: #fef3c7;
+  color: #b45309 !important;
+}
+#checklist-data-titipan ul li font.text-success {
+  background: #d1fae5;
+  color: #047857 !important;
+}
+/* The "Dari / Untuk" block reuses .container-check purely for its indent -
+   there's no real checkbox inside it - and My_control.php's get_data_resi()
+   always renders it with an extra "pl-0" class (`class='container-check
+   pl-0'`), which no actual checklist checkbox row ever has. Use that as the
+   precise marker instead of "comes right after an <h4>": both the info box
+   AND the first real checklist item sit immediately after an <h4>, so that
+   sibling-position heuristic was matching the first item too and starving
+   it of the left padding its checkbox needs - that's what made the checkbox
+   overlap "ROKOK DJARUM 76 APEL"'s text. */
+#checklist-data-titipan .container-check.pl-0 {
+  cursor: default;
+  background: var(--sp-body-bg);
+  border-radius: var(--sp-radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.4rem;
+}
+/* The actual checklist checkbox rows: light separators instead of a
+   filled-checkbox wall of text, easier to scan item by item. */
+#checklist-data-titipan .container-check:not(.pl-0) {
+  padding: 0.5rem 0.5rem 0.5rem 2.2rem;
+  border-bottom: 1px dashed var(--sp-border);
+  margin-bottom: 0;
+  transition: background var(--sp-transition);
+}
+#checklist-data-titipan .container-check:not(.pl-0):hover {
+  background: var(--sp-body-bg);
 }
 
 /* ---------------------------------------------------------------------- *
@@ -873,6 +1171,16 @@ img[src*="Wedges.svg"] {
   transform: scale(1.1);
 }
 a .icon-aksi.text-danger:hover { color: var(--sp-danger); }
+
+/* Font Awesome 4 -> 5/6 icon name that never got renamed in the markup:
+   "fa-clock-o" (home.php's "Masih Di Pos Pendaftaran" stat card icon,
+   home_old.php too) doesn't exist in FA5/6 (loaded here), so the glyph was
+   rendering as nothing - the ".fas" class alone sets the icon font, it's
+   just the specific "-o" name with no matching content rule. Bridge it to
+   FA5/6's "clock" glyph. */
+.fa-clock-o::before {
+  content: "\f017";
+}
 
 /* ---------------------------------------------------------------------- *
  * 17. Footer
