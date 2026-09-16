@@ -901,7 +901,9 @@ class CI_Upload {
 		}
 
 		// Images get some additional checks
-		if (in_array($ext, array('gif', 'jpg', 'jpeg', 'jpe', 'png'), TRUE) && @getimagesize($this->file_temp) === FALSE)
+		$is_image_ext = in_array($ext, array('gif', 'jpg', 'jpeg', 'jpe', 'png'), TRUE);
+		$image_size = $is_image_ext ? @getimagesize($this->file_temp) : FALSE;
+		if ($is_image_ext && $image_size === FALSE)
 		{
 			return FALSE;
 		}
@@ -913,9 +915,32 @@ class CI_Upload {
 
 		if (isset($this->_mimes[$ext]))
 		{
-			return is_array($this->_mimes[$ext])
-				? in_array($this->file_type, $this->_mimes[$ext], TRUE)
-				: ($this->_mimes[$ext] === $this->file_type);
+			$expected_mimes = is_array($this->_mimes[$ext]) ? $this->_mimes[$ext] : array($this->_mimes[$ext]);
+
+			if (in_array($this->file_type, $expected_mimes, TRUE))
+			{
+				return TRUE;
+			}
+
+			/**
+			 * Some PNG/JPEG uploads were being rejected here even though they
+			 * are genuinely valid images of the right type, because the OS
+			 * "magic"/fileinfo mime-sniffing this class relies on above
+			 * ($this->file_type, from finfo_file()) reported an unexpected
+			 * mime string for that particular file (inconsistent magic
+			 * database matches happen for some PNG encoders/tools).
+			 * getimagesize() parses the file's actual signature and pixel
+			 * data via PHP's own image decoders, independent of that OS
+			 * mime-sniffing - if IT independently confirms the file really
+			 * is the image type its extension claims, trust that instead of
+			 * failing a genuinely valid upload.
+			 */
+			if ($is_image_ext && isset($image_size['mime']) && in_array($image_size['mime'], $expected_mimes, TRUE))
+			{
+				return TRUE;
+			}
+
+			return FALSE;
 		}
 
 		return FALSE;

@@ -216,8 +216,9 @@ class Cashier extends MY_Controller {
                         }else{
                               $get_data_diserahkan = $this->admin_model->get_data_select("penggunaan_uang","id,tanggal,total_penggunaan,(SELECT COALESCE(SUM(penggunaan),0) FROM belanja_uang_tunai WHERE belanja_uang_tunai.id_penyerahan=penggunaan_uang.id) as total_belanja_tunai,(total_penggunaan-(SELECT COALESCE(SUM(penggunaan),0) FROM belanja_uang_tunai WHERE belanja_uang_tunai.id_penyerahan=penggunaan_uang.id)) as sisa_uang_tunai","penggunaan LIKE '%Diserahkan Tunai Ke WBP%' AND kode_tahanan = '$kode_tahanan' ORDER BY tanggal DESC LIMIT 0,20","result");
                               $get_data_diserahkan = array_reverse($get_data_diserahkan);
-                              // Alokasikan belanja ke penyerahan tunai yang tersedia (FIFO). Sisa yang
-                              // tidak tercover (saldo tunai kurang/nol) dicatat sebagai hutang di bawah.
+                              // Alokasikan belanja ke penyerahan tunai yang tersedia (FIFO). Jika saldo
+                              // tunai tidak cukup untuk menutup seluruh belanja, transaksi ditolak
+                              // (tidak boleh berhutang).
                               $sisa_total_belanja = $grand_total;
                               $data_penggunaan = [];
                               foreach ($get_data_diserahkan as $gdd1) {
@@ -238,8 +239,11 @@ class Cashier extends MY_Controller {
                                           }
                                     }
                               }
-                              $data_input = [];
-                              if(!empty($data_penggunaan)){
+                              if($sisa_total_belanja > 0){
+                                    // Saldo tunai WBP tidak mencukupi, pembelian ditolak.
+                                    $fb = ["status" => 500, "title" => "Gagal", "res" => "Saldo tunai WBP tidak mencukupi (kurang Rp. ".number_format($sisa_total_belanja,0,"",".").")", "icon" => "error"];
+                              }else{
+                                    $data_input = [];
                                     foreach ($data_penggunaan as $id_penyerahan => $value_dp) {
                                           $data_input[] = [
                                                 "id_penyerahan" => $id_penyerahan,
@@ -253,33 +257,17 @@ class Cashier extends MY_Controller {
                                                 "is_hutang" => "Tidak",
                                           ];
                                     }
-                              }
-                              $keterangan_hutang = "";
-                              if($sisa_total_belanja > 0){
-                                    // Uang tunai dipegang tidak cukup, sisanya dicatat sebagai hutang WBP
-                                    $data_input[] = [
-                                          "id_penyerahan" => NULL,
-                                          "tanggal" => date("Y-m-d H:i:s"),
-                                          "kode_tahanan" => $kode_tahanan,
-                                          "data_belanja" => json_encode($daftar_belanja),
-                                          "saldo_awal" => 0,
-                                          "penggunaan" => $sisa_total_belanja,
-                                          "total_sisa" => -$sisa_total_belanja,
-                                          "bukti" => base_url("upload/bukti_belanja_manual/".$filename_bukti),
-                                          "is_hutang" => "Ya",
-                                    ];
-                                    $keterangan_hutang = "<br><span class='text-danger'>WBP berhutang Rp. ".number_format($sisa_total_belanja,0,"",".")."</span>";
-                              }
-                              if(!empty($data_input)){
-                                    $action = $this->admin_model->insertimport("belanja_uang_tunai",$data_input);
-                                    if($action){
-                                          $this->admin_model->kurangi_stok($nama_barang, $qty);
-                                          $fb = ["status" => 200, "title" => "Sukses", "res" => "Data berhasil disimpan".$keterangan_hutang."<br>".$image_status, "icon" => "success"];
+                                    if(!empty($data_input)){
+                                          $action = $this->admin_model->insertimport("belanja_uang_tunai",$data_input);
+                                          if($action){
+                                                $this->admin_model->kurangi_stok($nama_barang, $qty);
+                                                $fb = ["status" => 200, "title" => "Sukses", "res" => "Data berhasil disimpan<br>".$image_status, "icon" => "success"];
+                                          }else{
+                                                $fb = ["status" => 500, "title" => "Gagal", "res" => "Data gagal disimpan<br>".$image_status, "icon" => "error"];
+                                          }
                                     }else{
-                                          $fb = ["status" => 500, "title" => "Gagal", "res" => "Data gagal disimpan<br>".$image_status, "icon" => "error"];
+                                          $fb = ["status" => 500, "title" => "Gagal", "res" => "Data input kosong", "icon" => "error"];
                                     }
-                              }else{
-                                    $fb = ["status" => 500, "title" => "Gagal", "res" => "Data input kosong", "icon" => "error"];
                               }
                         }
                   }else{
@@ -287,6 +275,100 @@ class Cashier extends MY_Controller {
                   }
             }
             echo json_encode($fb);
+            die();
+      }
+
+      // ==========================================================
+      // PEMBELI NON-WBP (pembeli umum/luar, bukan warga binaan)
+      // Pembayaran selalu tunai, tidak menyentuh saldo/penyimpanan uang
+      // WBP manapun - hanya mengurangi stok & tercatat di rekap penjualan.
+      // ==========================================================
+      public function use_money_non_wbp()
+      {
+            header("Content-Type:text/event-stream");
+            $nama_barang_post = explode(",",$this->input->post("nama_barang"));
+            foreach ($nama_barang_post as $key => $value) {
+                  if(!empty($value)){
+                        $nama_barang[] = $value;
+                  }
+            }
+            $qty_post = explode(",",$this->input->post("qty"));
+            foreach ($qty_post as $key => $value) {
+                  if(!empty($value)){
+                        $qty[] = $value;
+                  }
+            }
+            $total_post = explode(",",str_replace(".","",$this->input->post("total")));
+            foreach ($total_post as $key => $value) {
+                  if(!empty($value)){
+                        $total[] = $value;
+                  }
+            }
+
+            if(empty($_FILES["bukti"]["name"]) || empty($nama_barang)){
+                  echo json_encode(["status" => 500, "title" => "Gagal", "res" => "Data barang / bukti foto tidak boleh kosong", "icon" => "error"]);
+                  die();
+            }
+
+            $validasi_stok = $this->admin_model->validasi_stok($nama_barang, $qty);
+            if($validasi_stok !== TRUE){
+                  echo json_encode(["status" => 500, "title" => "Gagal", "res" => $validasi_stok, "icon" => "error"]);
+                  die();
+            }
+
+            $filename_bukti = hash("ripemd160",time()).".jpeg";
+            $config_bukti = array(
+                  "upload_path" => "./upload/bukti_belanja_manual/",
+                  "allowed_types" => "jpg|jpeg|png|",
+                  "file_name" => $filename_bukti,
+            );
+            $this->load->library('upload', $config_bukti);
+            $upload_bukti = $this->upload->initialize($config_bukti);
+            if(!$this->upload->do_upload('bukti')){
+                  echo json_encode(["status" => 500, "title" => "Gagal", "res" => "Bukti foto gagal diupload: ".strip_tags($this->upload->display_errors()), "icon" => "error"]);
+                  die();
+            }
+            if(!$upload_bukti){
+                  $image_data = $this->upload->data();
+                  $config_bukti['image_library'] = 'gd2';
+                  $config_bukti['source_image'] = $image_data['full_path'];
+                  $config_bukti['maintain_ratio'] = TRUE;
+                  $config_bukti['width'] = 100;
+                  $config_bukti['height'] = 100;
+                  $this->load->library('image_lib', $config_bukti);
+                  $this->image_lib->resize();
+            }
+
+            $grand_total = 0;
+            $daftar_belanja = [];
+            foreach ($nama_barang as $key => $value) {
+                  $qty_barang = !empty($qty[$key]) ? " (".$qty[$key].")" : "";
+                  $total_barang = !empty($total[$key]) ? str_replace(".","",$total[$key])*1 : 0;
+                  $grand_total += $total_barang;
+                  $daftar_belanja[$value.$qty_barang] = $total_barang;
+            }
+
+            // Dicatat di belanja_uang_tunai TANPA id_penyerahan/kode_tahanan (tidak
+            // terkait deposit WBP manapun) supaya tetap muncul di rekap penjualan
+            // tunai, tapi tidak pernah memotong/mengurangi saldo WBP manapun.
+            $data_input = [
+                  "id_penyerahan" => NULL,
+                  "tanggal" => date("Y-m-d H:i:s"),
+                  "kode_tahanan" => "NON-WBP",
+                  "data_belanja" => json_encode($daftar_belanja),
+                  "saldo_awal" => 0,
+                  "penggunaan" => $grand_total,
+                  "total_sisa" => 0,
+                  "bukti" => base_url("upload/bukti_belanja_manual/".$filename_bukti),
+                  "is_hutang" => "Tidak",
+            ];
+            $this->admin_model->insert_data("belanja_uang_tunai",$data_input);
+            if($this->db->insert_id()){
+                  $this->admin_model->kurangi_stok($nama_barang, $qty);
+                  echo json_encode(["status" => 200, "title" => "Sukses", "res" => "Penjualan ke pembeli Non-WBP berhasil disimpan", "icon" => "success"]);
+            }else{
+                  echo json_encode(["status" => 500, "title" => "Gagal", "res" => "Data gagal disimpan", "icon" => "error"]);
+            }
             die();
       }
 
@@ -389,8 +471,9 @@ class Cashier extends MY_Controller {
                               $riwayat_penyimpanan = $this->admin_model->get_data_select("penyimpanan_uang","id,jumlah_uang,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) as total_penggunaan,(jumlah_uang-IF((SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id) > 0,(SELECT SUM(total_penggunaan) as total_penggunaan FROM penggunaan_uang WHERE id_uang_masuk=penyimpanan_uang.id),0)) as sisa_uang","kode_tahanan = '$code_napi' HAVING sisa_uang >= 1 AND id != '' ORDER BY tanggal DESC LIMIT 0,20","result");
 
                               // Alokasikan belanja ke setoran (penyimpanan_uang) yang masih tersisa (FIFO,
-                              // untuk keperluan histori/audit per setoran). Sisa yang tidak tercover
-                              // (saldo digital kurang/nol) dicatat sebagai hutang di bawah, bukan diblokir.
+                              // untuk keperluan histori/audit per setoran). Jika saldo digital tidak
+                              // cukup untuk menutup seluruh belanja, transaksi ditolak (tidak boleh
+                              // berhutang).
                               $data_penggunaan = [];
                               $sisa_penggunaan = $total_belanja;
                               if(!empty($riwayat_penyimpanan)){
@@ -413,8 +496,11 @@ class Cashier extends MY_Controller {
                                     }
                               }
 
-                              $data_input = [];
-                              if(!empty($data_penggunaan)){
+                              if($sisa_penggunaan > 0){
+                                    // Saldo digital WBP tidak mencukupi, pembelian ditolak.
+                                    $fb = ["status" => 500, "title" => "Gagal", "res" => "Saldo digital WBP tidak mencukupi (kurang Rp. ".number_format($sisa_penggunaan,0,"",".").")", "icon" => "error"];
+                              }else{
+                                    $data_input = [];
                                     foreach ($data_penggunaan as $id_uang_masuk => $value_dp) {
                                           $data_input[] = [
                                                 "id_uang_masuk" => $id_uang_masuk,
@@ -429,37 +515,19 @@ class Cashier extends MY_Controller {
                                                 "is_hutang" => "Tidak",
                                           ];
                                     }
-                              }
 
-                              $keterangan_hutang = "";
-                              if($sisa_penggunaan > 0){
-                                    // Saldo digital WBP kurang/habis, sisanya dicatat sebagai hutang
-                                    $data_input[] = [
-                                          "id_uang_masuk" => NULL,
-                                          "tanggal" => date("Y-m-d H:i:s"),
-                                          "kode_tahanan" => $code_napi,
-                                          "penggunaan" => json_encode($belanja_koperasi),
-                                          "saldo_awal" => 0,
-                                          "total_penggunaan" => $sisa_penggunaan,
-                                          "saldo_akhir" => -$sisa_penggunaan,
-                                          "bukti" => $filename_bukti,
-                                          "status" => "Need Confirm",
-                                          "is_hutang" => "Ya",
-                                    ];
-                                    $keterangan_hutang = "<br><span class='text-danger'>WBP berhutang Rp. ".number_format($sisa_penggunaan,0,"",".")."</span>";
-                              }
-
-                              if(!empty($data_input)){
-                                    $this->admin_model->insertimport("penggunaan_uang",$data_input);
-                                    $affected = $this->db->affected_rows();
-                                    if($affected >= 0){
-                                          $this->admin_model->kurangi_stok($nama_barang, $qty);
-                                          $fb = ["status" => 200, "title" => "Sukses", "res" => "Data berhasil disimpan".$keterangan_hutang."<br>".$image_status, "icon" => "success"];
+                                    if(!empty($data_input)){
+                                          $this->admin_model->insertimport("penggunaan_uang",$data_input);
+                                          $affected = $this->db->affected_rows();
+                                          if($affected >= 0){
+                                                $this->admin_model->kurangi_stok($nama_barang, $qty);
+                                                $fb = ["status" => 200, "title" => "Sukses", "res" => "Data berhasil disimpan<br>".$image_status, "icon" => "success"];
+                                          }else{
+                                                $fb = ["status" => 500, "title" => "Gagal", "res" => "Data gagal disimpan", "icon" => "error"];
+                                          }
                                     }else{
-                                          $fb = ["status" => 500, "title" => "Gagal", "res" => "Data gagal disimpan", "icon" => "error"];
+                                          $fb = ["status" => 500, "title" => "Gagal", "res" => "Data input kosong", "icon" => "error"];
                                     }
-                              }else{
-                                    $fb = ["status" => 500, "title" => "Gagal", "res" => "Data input kosong", "icon" => "error"];
                               }
                         }
             }else{
@@ -516,10 +584,13 @@ class Cashier extends MY_Controller {
       public function simpan_kulakan()
       {
             // array_filter TANPA array_values supaya key tetap sejajar dengan
-            // $jumlah_barang / $harga_tengkulak (baris kosong bisa saja ada di tengah)
-            $nama_barang     = array_filter((array) $this->input->post("nama_barang"));
-            $jumlah_barang   = (array) $this->input->post("jumlah_barang");
-            $harga_tengkulak = (array) $this->input->post("harga_tengkulak");
+            // $jumlah_barang / $harga_subtotal (baris kosong bisa saja ada di tengah)
+            $nama_barang    = array_filter((array) $this->input->post("nama_barang"));
+            $jumlah_barang  = (array) $this->input->post("jumlah_barang");
+            // MODIFIKASI: yang diinput sekarang harga sub total (harga borongan dari
+            // tengkulak untuk seluruh jumlah kulakan), harga satuan dihitung otomatis
+            // (sub total dibagi jumlah kulakan) - bukan lagi diinput manual per satuan.
+            $harga_subtotal = (array) $this->input->post("harga_subtotal");
 
             if(empty($nama_barang)){
                   $this->swal("Gagal","Daftar barang kulakan tidak boleh kosong","error");
@@ -561,9 +632,9 @@ class Cashier extends MY_Controller {
                         $this->swal("Gagal","Barang \"".$nb."\" tidak ditemukan di data barang koperasi, silahkan tambahkan dulu di menu Data Barang","error");
                         redirect("kulakan_input");
                   }
-                  $jumlah = !empty($jumlah_barang[$key]) ? (int) str_replace(".","",$jumlah_barang[$key]) : 0;
-                  $harga  = !empty($harga_tengkulak[$key]) ? (int) str_replace(".","",$harga_tengkulak[$key]) : 0;
-                  $subtotal = $jumlah * $harga;
+                  $jumlah   = !empty($jumlah_barang[$key]) ? (int) str_replace(".","",$jumlah_barang[$key]) : 0;
+                  $subtotal = !empty($harga_subtotal[$key]) ? (int) str_replace(".","",$harga_subtotal[$key]) : 0;
+                  $harga    = $jumlah > 0 ? (int) round($subtotal / $jumlah) : 0;
                   $total_biaya += $subtotal;
                   $detail[] = [
                         "kode_barang" => $barang->kode_barang,

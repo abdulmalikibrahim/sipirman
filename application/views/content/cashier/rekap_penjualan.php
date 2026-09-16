@@ -3,10 +3,14 @@
 // rekap_penjualan.php — View: Rekap Penjualan Kasir
 // ================================================================
 
+// MODIFIKASI: sebelumnya cuma menangkap pembelian "Oleh WBP" (dari kasir
+// langsung) - pembelian lewat akun Keluarga Inti/Penitip (Warung SIPIRMAN
+// online, disimpan dengan pola "Oleh Keluarga <nama>"/"Oleh Penitip <nama>")
+// tidak pernah ikut muncul di rekap walau stok barangnya sudah berkurang.
 $rekap_cashless = $this->admin_model->get_data_select(
       "penggunaan_uang",
       "id, tanggal, kode_tahanan, penggunaan, total_penggunaan, status",
-      "penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh WBP)%' AND id != '' ORDER BY tanggal DESC",
+      "(penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh WBP)%' OR penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh Keluarga%' OR penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh Penitip%') AND id != '' ORDER BY tanggal DESC",
       "result"
 );
 

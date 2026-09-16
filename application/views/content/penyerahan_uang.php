@@ -86,7 +86,7 @@ $jumlah_uang = "Rp. ".number_format($this->input->get("i"),0,"",".");
                                     foreach ($belanja as $belanja) {
                                         $detail_belanja = '';
                                         $totalbelanjaperpenyerahan = 0;
-                                        $data_belanja = json_decode($belanja->data_belanja,true);
+                                        $data_belanja = json_decode($belanja->data_belanja,true) ?: []; // PHP 8: count() butuh array, bukan null
                                         // echo $belanja->id."<br>".print_r($data_belanja);
                                         $count_data_belanja = count($data_belanja);
                                         $total_count_belanja += $count_data_belanja;

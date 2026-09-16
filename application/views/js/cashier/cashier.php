@@ -57,6 +57,7 @@
                         beforeSend:function() {
                               $("#kode_barang_"+id).val("Memuat...");
                               $("#harga_"+id).val("Memuat...");
+                              $("#stok_"+id).val("");
                               $("#btn-next-process").attr("disabled",true);
                               $("#btn-next-process").removeClass("btn-info").addClass("btn-secondary");
                         },
@@ -68,15 +69,19 @@
                                     $("#qty_"+id).val("1");
                                     $("#harga_"+id).val(d.harga);
                                     $("#total_"+id).val(d.harga);
+                                    // MODIFIKASI: tampilkan stok barang saat ini
+                                    $("#stok_"+id).val(d.stok).data("stok", d.stok);
+                                    cek_stok(id);
                                     grand_total();
                                     if(type == "tambah"){
                                           new_id = Date.now();
-                                          add_row = '<tr id="row_'+new_id+'"><td><input type="text" name="kode_barang[]" id="kode_barang_'+new_id+'" class="form-control"></td><td><input type="text" name="nama_barang[]" id="nama_barang_'+new_id+'" data-type="tambah" data-id="'+new_id+'" list="data_barang" class="form-control" onchange="get_data(this)"></td><td><input type="number" name="qty[]" onkeyup="ganti_qty(this)" onchange="ganti_qty(this)" data-id="'+new_id+'" id="qty_'+new_id+'" class="form-control" value=""></td><td><input type="text" name="total[]" id="total_'+new_id+'" class="form-control harga harga-total text-dark" readonly><input type="text" name="harga[]" id="harga_'+new_id+'" class="form-control harga" hidden></td><td class="align-middle"><a href="javascript:void(0)" class="btn btn-sm btn-danger" title="Delete" onclick="delete_row(this)" data-id="'+new_id+'"><i class="fas fa-trash-alt m-0"></i></a></td></tr>';
+                                          add_row = '<tr id="row_'+new_id+'"><td><input type="text" name="kode_barang[]" id="kode_barang_'+new_id+'" class="form-control"></td><td><input type="text" name="nama_barang[]" id="nama_barang_'+new_id+'" data-type="tambah" data-id="'+new_id+'" list="data_barang" class="form-control" onchange="get_data(this)"></td><td><input type="text" id="stok_'+new_id+'" class="form-control" readonly></td><td><input type="number" name="qty[]" onkeyup="ganti_qty(this)" onchange="ganti_qty(this)" data-id="'+new_id+'" id="qty_'+new_id+'" class="form-control" value=""></td><td><input type="text" name="total[]" id="total_'+new_id+'" class="form-control harga harga-total text-dark" readonly><input type="text" name="harga[]" id="harga_'+new_id+'" class="form-control harga" hidden></td><td class="align-middle"><a href="javascript:void(0)" class="btn btn-sm btn-danger" title="Delete" onclick="delete_row(this)" data-id="'+new_id+'"><i class="fas fa-trash-alt m-0"></i></a></td></tr>';
                                           $("#list-barang").append(add_row);
                                     }
                               }else{
                                     $("#kode_barang_"+id).val("-");
                                     $("#harga_"+id).val("0");
+                                    $("#stok_"+id).val("-");
                               }
                               $("#btn-next-process").attr("disabled",false);
                               $("#btn-next-process").removeClass("btn-secondary").addClass("btn-info");
@@ -95,7 +100,21 @@
             harga = harga.replace(/\./g,"");
             total_harga = parseInt(harga) * parseInt(qty);
             $("#total_"+id).val(formatharga(total_harga));
+            cek_stok(id);
             grand_total();
+      }
+
+      // MODIFIKASI: tandai kalau qty yang diminta melebihi stok barang yang ada
+      function cek_stok(id) {
+            stok = parseInt($("#stok_"+id).data("stok"));
+            qty  = parseInt($("#qty_"+id).val()) || 0;
+            if(!isNaN(stok) && qty > stok){
+                  $("#stok_"+id).addClass("is-invalid text-danger");
+                  $("#qty_"+id).addClass("is-invalid");
+            }else{
+                  $("#stok_"+id).removeClass("is-invalid text-danger");
+                  $("#qty_"+id).removeClass("is-invalid");
+            }
       }
 
       function delete_row(data) {
@@ -126,6 +145,8 @@
                         data:{ code_napi:code_napi },
                         beforeSend:function() { console.log("Loading..."); },
                         success:function(r) {
+                              _is_non_wbp = false;
+                              $("#col-uang-digital").show();
                               $("#kode_tahanan").val(code_napi);
                               $("#uang-digital").attr("data-code-napi", code_napi);
                               $("#uang-manual").attr("data-code-napi", code_napi);
@@ -142,10 +163,25 @@
       function pilih_tahanan() {
             total_belanja = parseInt($("#grand-total").html().replace(/\./g,""));
             if(total_belanja > 0){
+                  _is_non_wbp = false;
+                  $("#col-uang-digital").show();
                   $("#pilihtahanan").modal("show");
             }else{
                   swal.fire("Warning","Mohon masukkan barang belanja","warning");
             }
+      }
+
+      // MODIFIKASI: pembeli Non-WBP - lewati pilih WBP, pembayaran dipaksa tunai
+      // dan tidak menyentuh saldo/penyimpanan uang WBP manapun.
+      var _is_non_wbp = false;
+      function pilih_non_wbp() {
+            _is_non_wbp = true;
+            $("#kode_tahanan").val("");
+            $("#uang-digital").attr("data-code-napi", "");
+            $("#uang-manual").attr("data-code-napi", "");
+            $("#col-uang-digital").hide();
+            $("#pilihtahanan").modal("hide");
+            $("#pilihpenggunaanuang").modal("show");
       }
 
       $("#foto_bukti").click(function() { $("#bukti").trigger("click"); });
@@ -171,10 +207,13 @@
                   formData.append('total', total);
                   formData.append('code_napi', code_napi);
                   formData.append('bukti', $("#bukti")[0].files[0]);
+                  // MODIFIKASI: pembeli Non-WBP dikirim ke endpoint terpisah yang tidak
+                  // menyentuh saldo/penyimpanan uang WBP manapun.
+                  var url_pembayaran = _is_non_wbp ? "<?= base_url("use_money_non_wbp") ?>" : "<?= base_url("use_money_manual") ?>";
                   $.ajax({
                         enctype:'multipart/form-data',
                         type:"post",
-                        url:"<?= base_url("use_money_manual") ?>",
+                        url:url_pembayaran,
                         data:formData,
                         dataType:"JSON",
                         processData:false,

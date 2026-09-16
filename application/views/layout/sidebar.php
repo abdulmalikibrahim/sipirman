@@ -89,9 +89,6 @@
                         <a style="font-size:9pt;" class="waves-effect waves-dark" href="<?= base_url("topup_saldo") ?>" aria-expanded="false"><i class="fas fa-wallet pt-1" style="font-size:13pt;"></i><span class="hide-menu">Top Up Saldo WBP</span></a>
                     </li>
                     <li>
-                        <a style="font-size:9pt;" class="waves-effect waves-dark" href="<?= base_url("daftar_hutang") ?>" aria-expanded="false"><i class="fas fa-exclamation-circle pt-1" style="font-size:13pt;"></i><span class="hide-menu">Daftar Hutang WBP</span></a>
-                    </li>
-                    <li>
                         <a style="font-size:9pt;" class="waves-effect waves-dark" href="<?= base_url("confirm_belanja") ?>" aria-expanded="false"><?= $circle_notif; ?><span class="hide-menu">Konfirmasi Belanja</span></a>
                     </li>
                     <li>

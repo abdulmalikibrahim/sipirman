@@ -36,8 +36,8 @@
                                     <th class="text-center"><div style="width:25rem;">Nama Barang</div></th>
                                     <th class="text-center"><div style="width:8rem;">Stok Saat Ini</div></th>
                                     <th class="text-center"><div style="width:8rem;">Jumlah Kulakan</div></th>
-                                    <th class="text-center"><div style="width:10rem;">Harga Tengkulak (satuan)</div></th>
-                                    <th class="text-center">Subtotal</th>
+                                    <th class="text-center"><div style="width:10rem;">Harga Sub Total</div></th>
+                                    <th class="text-center">Harga Satuan</th>
                                     <th class="text-center"></th>
                                 </tr>
                             </thead>
@@ -45,9 +45,9 @@
                                 <tr id="row_1">
                                     <td><input type="text" name="nama_barang[]" id="nama_barang_1" data-type="tambah" data-id="1" list="data_barang" class="form-control" onchange="get_data(this)"></td>
                                     <td><input type="text" id="stok_1" class="form-control" readonly></td>
-                                    <td><input type="number" min="1" name="jumlah_barang[]" onkeyup="hitung_subtotal(this)" onchange="hitung_subtotal(this)" data-id="1" id="jumlah_1" class="form-control"></td>
-                                    <td><input type="text" name="harga_tengkulak[]" onkeyup="format_harga_tengkulak(this)" onchange="hitung_subtotal(this)" data-id="1" id="harga_1" class="form-control"></td>
-                                    <td><input type="text" id="subtotal_1" class="form-control" readonly></td>
+                                    <td><input type="number" min="1" name="jumlah_barang[]" onkeyup="hitung_satuan(this)" onchange="hitung_satuan(this)" data-id="1" id="jumlah_1" class="form-control"></td>
+                                    <td><input type="text" name="harga_subtotal[]" onkeyup="format_harga_subtotal(this)" onchange="hitung_satuan(this)" data-id="1" id="subtotal_1" class="form-control"></td>
+                                    <td><input type="text" id="harga_1" class="form-control" readonly></td>
                                     <td class="align-middle"><a href="javascript:void(0)" class="btn btn-sm btn-danger" title="Delete" onclick="delete_row(this)" data-id="1"><i class="fas fa-trash-alt m-0"></i></a></td>
                                 </tr>
                             </tbody>

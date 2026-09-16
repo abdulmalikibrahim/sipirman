@@ -39,6 +39,46 @@
     </div>
 </div>
 
+<!-- MODIFIKASI: Histori Top Up Saldo (Tgl, Nama WBP, Nominal) -->
+<div class="card mt-3">
+    <div class="card-header">
+        <label for="" class="m-0">Histori Top Up Saldo</label>
+    </div>
+    <div class="card-body p-2">
+        <div class="table-responsive">
+            <table class="table table-bordered table-small" id="datatable">
+                <thead class="thead-light bg-light-info">
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Nama WBP</th>
+                        <th>Nominal</th>
+                        <th>Diinput Oleh</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $no = 1;
+                    $riwayat_topup = $this->admin_model->get_data_select("penyimpanan_uang","*","sumber_dana = 'Mandiri' ORDER BY tanggal DESC","result");
+                    if(!empty($riwayat_topup)){
+                        foreach ($riwayat_topup as $rt) {
+                            echo '
+                            <tr>
+                                <td class="align-middle" align="center">'.$no++.'</td>
+                                <td class="align-middle" align="center">'.date("d-M-Y H:i:s",strtotime($rt->tanggal)).'</td>
+                                <td class="align-middle">'.$rt->nama_tahanan.'</td>
+                                <td class="align-middle" align="center">Rp. '.number_format($rt->jumlah_uang,0,"",".").'</td>
+                                <td class="align-middle">'.$rt->input_by.'</td>
+                            </tr>';
+                        }
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <!-- FIX #2: Modal PIN untuk konfirmasi top up (sama seperti modal PIN di halaman Cashier) -->
 <div class="modal fade" id="modalPin" tabindex="-1" role="dialog" aria-labelledby="modalPinLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
       <div class="modal-dialog modal-sm" role="document">

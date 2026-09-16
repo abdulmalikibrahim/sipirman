@@ -47,6 +47,7 @@
                                           <tr>
                                                 <th class="text-center"><div style="width:10rem;">Kode Barang</div></th>
                                                 <th><div style="width:25rem;" class="text-center">Nama Barang</div></th>
+                                                <th><div style="width:5rem;" class="text-center">Stok</div></th>
                                                 <th><div style="width:5rem;" class="text-center">Qty</div></th>
                                                 <th class="text-center">Total</th>
                                                 <th class="text-center"></th>
@@ -57,6 +58,8 @@
                                                 <td><input type="text" name="kode_barang[]" id="kode_barang_1" class="form-control kode_barang"></td>
                                                 <!-- FIX #1: Hapus autocomplete="false" (nilai tidak valid), pakai autocomplete="off" hanya di sini supaya browser tidak override datalist -->
                                                 <td><input type="text" name="nama_barang[]" id="nama_barang_1" data-type="tambah" data-id="1" list="data_barang" class="form-control nama_barang" onchange="get_data(this)"></td>
+                                                <!-- MODIFIKASI: tampilkan stok barang saat ini supaya kasir tahu batas jual sebelum checkout -->
+                                                <td><input type="text" id="stok_1" class="form-control" readonly></td>
                                                 <td><input type="number" name="qty[]" onkeyup="ganti_qty(this)" onchange="ganti_qty(this)" data-id="1" id="qty_1" class="form-control qty" value=""></td>
                                                 <td>
                                                       <input type="text" name="total[]" id="total_1" class="form-control harga harga-total" readonly>
@@ -95,6 +98,11 @@
                   </a>
                   </div>
                   <div class="modal-body">
+                        <!-- MODIFIKASI: opsi pembeli Non-WBP (pengunjung/umum, bukan warga binaan) -
+                             pembayaran selalu tunai, tidak menyentuh saldo WBP manapun. -->
+                        <div class="w-100 text-right mb-2">
+                              <a href="javascript:void(0)" class="btn btn-warning" onclick="pilih_non_wbp()"><i class="fas fa-user mr-2"></i>Pembeli Non-WBP (Bayar Tunai)</a>
+                        </div>
                         <table class="table table-sm table-bordered table-hover" id="datatable-tahanan">
                               <thead class="thead-light">
                                     <tr style="font-size:10pt;">
@@ -156,8 +164,9 @@
                         <input type="file" name="bukti" id="bukti" accept=".png, .jpg" hidden required>
                         <img src="data:image/svg+xml,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20200%20150%22><rect%20width=%22200%22%20height=%22150%22%20fill=%22%23f3f4f8%22/><g%20fill=%22none%22%20stroke=%22%23c7cbd4%22%20stroke-width=%224%22><rect%20x=%2255%22%20y=%2240%22%20width=%2290%22%20height=%2265%22%20rx=%226%22/><circle%20cx=%2280%22%20cy=%2263%22%20r=%228%22/><path%20d=%22M55%2095l25-25%2020%2018%2015-15%2030%2030%22/></g><text%20x=%22100%22%20y=%22128%22%20font-family=%22sans-serif%22%20font-size=%2213%22%20fill=%22%239aa4b8%22%20text-anchor=%22middle%22>No%20Image</text></svg>" alt="Bukti Penyerahan" id="foto_bukti" width="100%">
                         <div class="row mt-3">
-                              <div class="col-6"><a href="javascript:void(0)" id="uang-manual" data-code-napi="" class="btn btn-success w-100" onclick="proses_pembayaran(this)"><i class="fas fa-money-bill-wave d-block mb-1" style="font-size:16pt;"></i>UANG TUNAI</a></div>
-                              <div class="col-6"><a href="javascript:void(0)" id="uang-digital" data-code-napi="" class="btn btn-primary w-100" onclick="tampil_modal_pin(this)"><i class="fas fa-wallet d-block mb-1" style="font-size:16pt;"></i>UANG DIGITAL</a></div>
+                              <div class="col-6" id="col-uang-manual"><a href="javascript:void(0)" id="uang-manual" data-code-napi="" class="btn btn-success w-100" onclick="proses_pembayaran(this)"><i class="fas fa-money-bill-wave d-block mb-1" style="font-size:16pt;"></i>UANG TUNAI</a></div>
+                              <!-- MODIFIKASI: disembunyikan di mode pembeli Non-WBP (pembayaran selalu tunai) -->
+                              <div class="col-6" id="col-uang-digital"><a href="javascript:void(0)" id="uang-digital" data-code-napi="" class="btn btn-primary w-100" onclick="tampil_modal_pin(this)"><i class="fas fa-wallet d-block mb-1" style="font-size:16pt;"></i>UANG DIGITAL</a></div>
                         </div>
                   </div>
             </div>

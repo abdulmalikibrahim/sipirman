@@ -118,6 +118,7 @@ $route['check_barang'] = 'Cashier/check_barang';
 $route['diserahkan_uang'] = 'Cashier/diserahkan_uang';
 $route['use_money_digital'] = 'Cashier/use_money_digital';
 $route['use_money_manual'] = 'Cashier/use_money_manual';
+$route['use_money_non_wbp'] = 'Cashier/use_money_non_wbp';
 $route['verify_pin'] = 'cashier/verify_pin';
 $route['rekap_penjualan']            = 'cashier/rekap_penjualan';
 $route['terima_pembayaran_digital']  = 'cashier/terima_pembayaran_digital';

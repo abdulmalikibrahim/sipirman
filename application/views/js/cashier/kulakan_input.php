@@ -31,9 +31,9 @@
                                           add_row = '<tr id="row_'+new_id+'">'+
                                                 '<td><input type="text" name="nama_barang[]" id="nama_barang_'+new_id+'" data-type="tambah" data-id="'+new_id+'" list="data_barang" class="form-control" onchange="get_data(this)"></td>'+
                                                 '<td><input type="text" id="stok_'+new_id+'" class="form-control" readonly></td>'+
-                                                '<td><input type="number" min="1" name="jumlah_barang[]" onkeyup="hitung_subtotal(this)" onchange="hitung_subtotal(this)" data-id="'+new_id+'" id="jumlah_'+new_id+'" class="form-control"></td>'+
-                                                '<td><input type="text" name="harga_tengkulak[]" onkeyup="format_harga_tengkulak(this)" onchange="hitung_subtotal(this)" data-id="'+new_id+'" id="harga_'+new_id+'" class="form-control"></td>'+
-                                                '<td><input type="text" id="subtotal_'+new_id+'" class="form-control" readonly></td>'+
+                                                '<td><input type="number" min="1" name="jumlah_barang[]" onkeyup="hitung_satuan(this)" onchange="hitung_satuan(this)" data-id="'+new_id+'" id="jumlah_'+new_id+'" class="form-control"></td>'+
+                                                '<td><input type="text" name="harga_subtotal[]" onkeyup="format_harga_subtotal(this)" onchange="hitung_satuan(this)" data-id="'+new_id+'" id="subtotal_'+new_id+'" class="form-control"></td>'+
+                                                '<td><input type="text" id="harga_'+new_id+'" class="form-control" readonly></td>'+
                                                 '<td class="align-middle"><a href="javascript:void(0)" class="btn btn-sm btn-danger" title="Delete" onclick="delete_row(this)" data-id="'+new_id+'"><i class="fas fa-trash-alt m-0"></i></a></td>'+
                                                 '</tr>';
                                           $("#list-barang").append(add_row);
@@ -47,19 +47,21 @@
             }
       }
 
-      function format_harga_tengkulak(data) {
+      function format_harga_subtotal(data) {
             id = data.dataset.id;
-            $("#harga_"+id).val(formatharga($("#harga_"+id).val()));
-            hitung_subtotal(data);
+            $("#subtotal_"+id).val(formatharga($("#subtotal_"+id).val()));
+            hitung_satuan(data);
       }
 
-      function hitung_subtotal(data) {
-            id     = data.dataset.id;
-            jumlah = parseInt($("#jumlah_"+id).val()) || 0;
-            harga  = ($("#harga_"+id).val()+"").replace(/\./g,"");
-            harga  = parseInt(harga) || 0;
-            subtotal = jumlah * harga;
-            $("#subtotal_"+id).val(formatharga(subtotal));
+      // MODIFIKASI: sekarang yang diinput adalah harga sub total (harga borongan
+      // dari tengkulak), harga satuan dihitung otomatis (sub total / jumlah kulakan)
+      function hitung_satuan(data) {
+            id       = data.dataset.id;
+            jumlah   = parseInt($("#jumlah_"+id).val()) || 0;
+            subtotal = ($("#subtotal_"+id).val()+"").replace(/\./g,"");
+            subtotal = parseInt(subtotal) || 0;
+            harga    = jumlah > 0 ? Math.round(subtotal / jumlah) : 0;
+            $("#harga_"+id).val(formatharga(harga));
             grand_total();
       }
 
@@ -85,7 +87,7 @@
             grand_total_value = parseInt($("#grand-total").html().replace(/\./g,""));
             if(!grand_total_value || grand_total_value <= 0){
                   e.preventDefault();
-                  swal.fire("Warning","Mohon lengkapi daftar barang kulakan (jumlah & harga tengkulak)","warning");
+                  swal.fire("Warning","Mohon lengkapi daftar barang kulakan (jumlah & harga sub total)","warning");
             }
       });
 </script>

@@ -68,6 +68,29 @@ class Penyimpanan extends MY_Controller {
 
                   //buat nomor resi
                   $resi = hash("crc32b",date("dmyhis"));
+
+                  // MODIFIKASI: buat juga record induk di data_titipan supaya penitipan
+                  // uang/antiseptik/obat dari sini (termasuk dari keluarga) ikut muncul
+                  // di "Data Titipan" - sebelumnya modul Penyimpanan cuma menulis ke
+                  // penyimpanan_uang/penyimpanan_antiseptik/penyimpanan_obat saja, tidak
+                  // pernah membuat record data_titipan, jadi tidak pernah kelihatan di
+                  // rincian daftar barang titipan sama sekali.
+                  $data_titipan_input = [
+                        "id" => NULL,
+                        "resi" => $resi,
+                        "input_by" => $this->nama,
+                        "tanggal" => date("Y-m-d H:i:s"),
+                        "nik" => $nik,
+                        "nama_pengirim" => $nama_pengirim,
+                        "hubungan" => $hubungan,
+                        "keluarga_inti" => $dki,
+                        "kode_tahanan" => $kode_tahanan,
+                        "nama_tahanan" => $nama_tahanan,
+                        "data_barang" => json_encode([]),
+                        "status" => "Menunggu",
+                  ];
+                  $this->admin_model->insert_data("data_titipan",$data_titipan_input);
+
                   if(!empty($data_antiseptik)){
                         $data_input = [
                               "id" => NULL,

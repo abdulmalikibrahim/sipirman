@@ -34,7 +34,12 @@ if(is_array(json_decode($this->kode_tahanan,true))){
                     <?php 
                     $no = 1;
                     $load = '';
-                    $data_penyimpanan = $this->admin_model->query("SELECT kode_tahanan,nama_tahanan FROM `penyimpanan_uang` WHERE kode_tahanan IN(".$kode_tahanan.") GROUP BY kode_tahanan ORDER BY kode_tahanan ASC");
+                    // NOTE: GROUP BY dipindah ke derived table (dengan agregat pada nama_tahanan)
+                    // alih-alih SELECT kolom mentah + GROUP BY langsung, karena itu gagal di
+                    // bawah sql_mode ONLY_FULL_GROUP_BY (default banyak instalasi MySQL/MariaDB
+                    // modern) - sudah diverifikasi: ERROR 1055. Ini yang bikin halaman Monitor
+                    // Kontrol Keluar Masuk Uang selalu tampil kosong tanpa pesan apapun.
+                    $data_penyimpanan = $this->admin_model->query("SELECT kode_tahanan, MAX(nama_tahanan) as nama_tahanan FROM (SELECT kode_tahanan,nama_tahanan FROM `penyimpanan_uang` WHERE kode_tahanan IN(".$kode_tahanan.")) t GROUP BY kode_tahanan ORDER BY kode_tahanan ASC");
                     if(!empty($data_penyimpanan)){
                         foreach ($data_penyimpanan as $dp) {
                             $uang = $this->admin_model->get_data_select("penyimpanan_uang","SUM(jumlah_uang) as jumlah_uang","kode_tahanan = '".$dp["kode_tahanan"]."'","row");

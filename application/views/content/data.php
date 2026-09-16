@@ -100,7 +100,10 @@ foreach ($data_titipan as $data) {
         <td><?= $data->nama_tahanan; ?></td>
         <td align="left" width="200">
             <?php 
-            $barang_titipan = json_decode($data->data_barang, true);
+            // MODIFIKASI: fallback ke array kosong - titipan uang/antiseptik/obat
+            // (dari Penyimpanan::save()) tidak selalu punya data_barang, dan
+            // count(null) fatal error di PHP 8+ (count() butuh Countable|array).
+            $barang_titipan = json_decode($data->data_barang, true) ?: [];
             $count_bt = count($barang_titipan);
             if($count_bt > 1){
                 ?>

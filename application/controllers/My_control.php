@@ -2260,11 +2260,16 @@ class My_control extends CI_Controller {
 		$data["content"]    = "tagihan_rumbang_mart";
 		$data["javascript"] = "tagihan_rumbang_mart";
 
+		// MODIFIKASI: sebelumnya cuma menangkap transaksi "Oleh WBP" (dari kasir
+		// langsung) - pembelian lewat akun Keluarga Inti/Penitip untuk WBP yang
+		// sama tidak pernah ikut tertagih di sini walau stok sudah berkurang.
 		$wbp_transaksi = $this->db->query("
-			SELECT DISTINCT p.kode_tahanan, t.nama 
+			SELECT DISTINCT p.kode_tahanan, t.nama
 			FROM penggunaan_uang p
 			JOIN tahanan t ON p.kode_tahanan = t.code_napi
 			WHERE p.penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh WBP)%'
+			   OR p.penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh Keluarga%'
+			   OR p.penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh Penitip%'
 		")->result();
 
 		$data_tagihan = [];
@@ -2273,10 +2278,14 @@ class My_control extends CI_Controller {
 
 		foreach ($wbp_transaksi as $wbp) {
 			$items_db = $this->db->query("
-				SELECT id, tanggal, penggunaan, total_penggunaan, status 
-				FROM penggunaan_uang 
-				WHERE kode_tahanan = ? 
-				AND penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh WBP)%'
+				SELECT id, tanggal, penggunaan, total_penggunaan, status
+				FROM penggunaan_uang
+				WHERE kode_tahanan = ?
+				AND (
+					penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh WBP)%'
+					OR penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh Keluarga%'
+					OR penggunaan LIKE '%Belanja Warung SIPIRMAN (Oleh Penitip%'
+				)
 				ORDER BY tanggal DESC
 			", [$wbp->kode_tahanan])->result();
 
@@ -2289,12 +2298,25 @@ class My_control extends CI_Controller {
 				// Decode format JSON dari database
 				$json_str = $row->penggunaan;
 				$decoded = json_decode($json_str, true);
-				
+
+				// MODIFIKASI: cari key grup "Belanja Warung SIPIRMAN (Oleh ...)" secara
+				// generik - bisa "Oleh WBP" (dari kasir), atau "Oleh Keluarga <nama>" /
+				// "Oleh Penitip <nama>" (dari Warung SIPIRMAN online), bukan cuma yang
+				// literal "Oleh WBP" saja.
 				$belanja_items = [];
-				if (is_array($decoded) && isset($decoded['Belanja Warung SIPIRMAN (Oleh WBP)'])) {
-					$belanja_items = $decoded['Belanja Warung SIPIRMAN (Oleh WBP)'];
-				} elseif (is_array($decoded)) {
-					$belanja_items = $decoded;
+				if (is_array($decoded)) {
+					$grup_belanja = null;
+					foreach ($decoded as $grup_key => $grup_val) {
+						if (is_array($grup_val) && strpos($grup_key, 'Belanja Warung SIPIRMAN (Oleh') === 0) {
+							$grup_belanja = $grup_key;
+							break;
+						}
+					}
+					if ($grup_belanja !== null) {
+						$belanja_items = $decoded[$grup_belanja];
+					} else {
+						$belanja_items = $decoded;
+					}
 				} else {
 					// Fallback jika ada data lama berformat string biasa
 					$nama_str = trim(str_replace("Belanja Warung SIPIRMAN (Oleh WBP) -", "", $json_str));

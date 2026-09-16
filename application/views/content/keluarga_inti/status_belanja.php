@@ -17,7 +17,11 @@
             <tbody>
                 <?php 
                 $no = 1;
-                $status_belanja = $this->admin_model->get_data_select("penggunaan_uang","*,SUM(total_penggunaan) as grand_total_penggunaan","penggunaan LIKE '%".$this->nama."%' AND id_belanja_keluarga != '' GROUP BY id_belanja_keluarga ORDER BY tanggal DESC","result");
+                // NOTE: "*" bareng GROUP BY gagal di sql_mode ONLY_FULL_GROUP_BY (default
+                // banyak instalasi MySQL/MariaDB modern) - sudah diverifikasi ERROR 1055.
+                // Ini yang bikin "Histori dan Status Belanja" akun Keluarga selalu kosong.
+                $select_belanja = "id_belanja_keluarga, MAX(kode_tahanan) as kode_tahanan, MAX(tanggal) as tanggal, MAX(status) as status, MAX(penggunaan) as penggunaan, MAX(tanggal_diserahkan) as tanggal_diserahkan, MAX(bukti) as bukti, MAX(alasan_discard) as alasan_discard, SUM(total_penggunaan) as grand_total_penggunaan";
+                $status_belanja = $this->admin_model->get_data_select("penggunaan_uang",$select_belanja,"penggunaan LIKE '%".$this->nama."%' AND id_belanja_keluarga != '' GROUP BY id_belanja_keluarga ORDER BY tanggal DESC","result");
                 if(!empty($status_belanja)){
                         foreach ($status_belanja as $data) {
                             $wbp = $this->admin_model->get_data_select("tahanan","nama","code_napi = '".$data->kode_tahanan."'","row");
